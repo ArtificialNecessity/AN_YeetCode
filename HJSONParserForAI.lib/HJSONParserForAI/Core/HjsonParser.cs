@@ -268,10 +268,14 @@ public class HjsonContentParser
             jsonWriter.WriteNumberValue(longValue);
             return;
         }
-        if (TryParseDouble(rawValue, out double doubleValue))
+        if (TryParseDouble(rawValue, out double parsedDoubleValue))
         {
             ConsumeChars(rawValue.Length);
-            jsonWriter.WriteNumberValue(doubleValue);
+            // Format the double to always include at least one decimal place.
+            // Utf8JsonWriter.WriteNumberValue(1.0) writes "1" (drops decimal),
+            // so we format it ourselves and use WriteRawValue.
+            string formattedDouble = FormatDoubleWithDecimal(parsedDoubleValue);
+            jsonWriter.WriteRawValue(formattedDouble);
             return;
         }
 
@@ -555,6 +559,21 @@ public class HjsonContentParser
         }
         parsedDouble = 0;
         return false;
+    }
+
+    /// <summary>
+    /// Format a double value as a JSON number string, always including at least one decimal place.
+    /// Examples: 1.0 → "1.0", 3.14 → "3.14", 0.05 → "0.05", 1e10 → "10000000000.0"
+    /// </summary>
+    private static string FormatDoubleWithDecimal(double doubleValue)
+    {
+        string formatted = doubleValue.ToString("G", System.Globalization.CultureInfo.InvariantCulture);
+        // If the formatted string doesn't contain a '.' or 'E', append ".0"
+        if (!formatted.Contains('.') && !formatted.Contains('E') && !formatted.Contains('e'))
+        {
+            formatted += ".0";
+        }
+        return formatted;
     }
 
     // ── Whitespace and comment skipping ─────────────────────
