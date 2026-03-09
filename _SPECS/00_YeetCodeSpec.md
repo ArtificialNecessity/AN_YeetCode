@@ -96,51 +96,72 @@ A trailing `?` marks a field or type as optional. Non-optional fields are guaran
 
 Types can reference themselves. This is how you represent trees, expressions, nested structures — anything with arbitrary depth.
 
+Each variant in a discriminated union is extracted into its own named `@Type`. The `kind` field holds a type reference (`@TypeName`) that identifies which variant is active, and the system validates that the referenced type matches one of the optional branches.
+
 ```hjson
 {
+  # Variant types for @Expression
+  @Binary: {
+    op: string
+    left: @Expression
+    right: @Expression
+  }
+
+  @Literal: {
+    value: string
+    type: string
+  }
+
+  @Call: {
+    function: string
+    args: [@Expression]
+  }
+
+  @Unary: {
+    op: string
+    operand: @Expression
+  }
+
+  # Discriminated union — kind is always a @Type reference
   @Expression: {
-    kind: string
-    binary: {
-      op: string
-      left: @Expression
-      right: @Expression
-    }?
-    literal: {
-      value: string
-      type: string
-    }?
-    call: {
-      function: string
-      args: [@Expression]
-    }?
-    unary: {
-      op: string
-      operand: @Expression
-    }?
+    kind: string          # @Binary | @Literal | @Call | @Unary
+    binary: @Binary?
+    literal: @Literal?
+    call: @Call?
+    unary: @Unary?
+  }
+
+  # Variant types for @Statement
+  @Assign: {
+    target: string
+    value: @Expression
+  }
+
+  @If: {
+    condition: @Expression
+    body: [@Statement]
+    else_body: [@Statement]?
+  }
+
+  @Return: {
+    value: @Expression?
+  }
+
+  @Block: {
+    statements: [@Statement]
   }
 
   @Statement: {
-    kind: string
-    assign: {
-      target: string
-      value: @Expression
-    }?
-    if: {
-      condition: @Expression
-      body: [@Statement]
-      else_body: [@Statement]?
-    }?
-    return: {
-      value: @Expression?
-    }?
-    block: {
-      statements: [@Statement]
-    }?
+    kind: string          # @Assign | @If | @Return | @Block
+    assign: @Assign?
+    if: @If?
+    return: @Return?
+    block: @Block?
   }
 }
 ```
 
-The `kind` field acts as a discriminator tag. Only the matching variant branch is populated — others are absent. This is a discriminated union expressed in plain HJSON, not algebraic types.
+The `kind` field holds a `@Type` reference that acts as a discriminator. Only the matching variant branch is populated — others are absent. Because the discriminator is a real type reference (not an opaque string), the system can validate at parse time that the `kind` value matches one of the optional branches and that the branch's type is correct. This is a discriminated union expressed in plain HJSON, not algebraic types.
 
 ### Arrays
 
@@ -214,15 +235,15 @@ The `->` arrow maps a rule's output to a schema type. Named captures auto-map to
 field: label:LABEL? type:IDENT name:IDENT "=" tag:INT ";"
   -> @MessageField
 
-# With discriminator — sets the kind tag for variant types
+# With discriminator — kind references the variant @Type
 binary: left:expression op:OP right:expression
-  -> @Expression { kind: "binary" }
+  -> @Expression { kind: @Binary }
 
 call: function:IDENT "(" args:expression_list ")"
-  -> @Expression { kind: "call" }
+  -> @Expression { kind: @Call }
 
 literal: value:LITERAL
-  -> @Expression { kind: "literal" }
+  -> @Expression { kind: @Literal }
 ```
 
 When a rule specifies `-> @Type`, the following happens:
@@ -287,13 +308,13 @@ When a rule has alternatives that produce different types or variants:
   expression: binary | call | literal
 
   binary: left:expression op:OP right:expression
-    -> @Expression { kind: "binary" }
+    -> @Expression { kind: @Binary }
 
   call: function:IDENT "(" args:expression_list ")"
-    -> @Expression { kind: "call" }
+    -> @Expression { kind: @Call }
 
   literal: value:LITERAL
-    -> @Expression { kind: "literal" }
+    -> @Expression { kind: @Literal }
   ```
 
 ### Full Grammar Example — Protobuf
@@ -438,11 +459,11 @@ The `#define` / `#call` mechanism supports recursion, which is required for recu
 ```
 <?yt delim="<% %>" ?>
 <%#define render_expr(e)%>
-<%#if e.kind == "binary"%>
+<%#if e.kind == @Binary%>
 (<%#call render_expr(e.binary.left)%> <%e.binary.op%> <%#call render_expr(e.binary.right)%>)
-<%#elif e.kind == "literal"%>
+<%#elif e.kind == @Literal%>
 <%e.literal.value%>
-<%#elif e.kind == "call"%>
+<%#elif e.kind == @Call%>
 <%e.call.function%>(<%#each e.call.args as arg separator=", "%><%#call render_expr(arg)%><%/each%>)
 <%/if%>
 <%/define%>
