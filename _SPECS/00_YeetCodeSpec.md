@@ -247,6 +247,19 @@ TOKEN_NAME: /regex/
 %skip: /pattern/
 ```
 
+### Grammar Directives
+
+| Directive | Purpose |
+|---|---|
+| `%skip: /pattern/` | Whitespace/comment pattern, consumed implicitly between tokens |
+| `%define name` | Declare a grammar parameter, supplied via `--define name=value` |
+| `%if expr` / `%else` / `%endif` | Preprocessor conditional — resolves before parsing, dead branches removed |
+| `%parse_file(capture, order, dups, target)` | Parse another file during the parse (see Multi-File Input) |
+| `-> @Type` | Map rule output to a schema type |
+| `-> @Type { kind: @Variant }` | Map rule output with discriminator |
+| `-> path[]` | Append to array at schema path |
+| `-> path[capture]` | Insert into map at schema path, keyed by capture |
+
 ### Expressions
 
 | Syntax | Meaning |
@@ -328,6 +341,87 @@ The `%skip` directive defines patterns consumed implicitly between tokens:
 ```
 %skip: /(?:\s|#[^\n]*|\/\/[^\n]*)*/
 ```
+
+### Grammar Parameters
+
+`%define` declares parameters that are supplied at invocation time via `--define`. Combined with `%if` / `%else` / `%endif`, they enable grammar variants without separate grammar files.
+
+```
+%define syntax
+
+field_decl:
+  %if syntax == "proto2"
+    label:LABEL type:IDENT fname:IDENT "=" tag:INT field_options? ";"
+  %else
+    label:LABEL? type:IDENT fname:IDENT "=" tag:INT field_options? ";"
+  %endif
+  -> messages[name].fields[fname]
+  -> @Field
+```
+
+```bash
+yeetcode generate --grammar proto.grammar.yeet --define syntax=proto3 ...
+```
+
+`%if` / `%else` / `%endif` are **preprocessor directives**, not runtime conditionals. They resolve before parsing begins — the grammar that actually executes has one code path, no ambiguity. The parser never sees the dead branch.
+
+### Multi-File Input
+
+`%parse_file` triggers parsing of additional input files during the parse. It references a capture for the filename and specifies merge behavior.
+
+```
+%parse_file(capture, order, duplicates, target_path)
+```
+
+| Argument | Values | Meaning |
+|---|---|---|
+| `capture` | any capture name | Which capture holds the file path |
+| `order` | `now` / `fifo` / `lifo` | When to parse: immediately (depth-first), queued after current file, or deferred stack |
+| `duplicates` | `skip` / `error` | If file was already parsed: silently skip, or fail |
+| `target_path` | `_` / any path | Where to merge the imported file's HJSON tree |
+
+**Target path `_`** merges into the document root. Imported file's top-level map keys union with the current tree. Key collisions are validation errors (maps enforce uniqueness):
+
+```
+# Protobuf-style: imported enums/messages merge into the global namespace
+import_decl: "import" path:QUOTED_STRING ";"
+  %parse_file(path, now, skip, _)
+  -> imports[]
+```
+
+Importing `google/protobuf/timestamp.proto` parses that file, and its `enums`, `messages`, `services` maps merge directly into the current file's maps.
+
+**Named target path** isolates the import under a specific key:
+
+```
+# Namespace-style: each imported file lands under its own key
+import_decl: "import" path:QUOTED_STRING ";"
+  %parse_file(path, now, skip, dependencies[path])
+  -> imports[]
+```
+
+The imported file's entire tree lands at `dependencies["google/protobuf/timestamp.proto"]`. No collision possible — each file gets its own namespace. Templates access imported types with `dependencies[import_path].messages[type_name]`.
+
+**Any arbitrary path** works:
+
+```
+# Merge into a shared section
+include_decl: "include" path:QUOTED_STRING ";"
+  %parse_file(path, now, skip, includes.shared_types)
+```
+
+File search paths are supplied at invocation:
+
+```bash
+yeetcode generate \
+  --grammar proto.grammar.yeet \
+  --input widgets.proto \
+  --import-path ./proto/ \
+  --import-path /usr/share/proto/ \
+  ...
+```
+
+The engine resolves the captured path against `--import-path` directories in order. The imported file is parsed using the **same grammar** — recursive imports work naturally (depth-first with `order: now`, breadth-first with `order: fifo`).
 
 ### Alternatives and Discriminators
 
@@ -415,9 +509,27 @@ public class <%pascal msg_name%> {
 <%/each%>
 ```
 
-### Multi-File Output
+### Single-File vs Multi-File Output
 
-The `#output` directive routes output to named files. It takes an expression — string concatenation with `+`, function calls like `pascal()` — not a template string. This avoids nested delimiters. A single template can produce any number of output files.
+Output mode is implicit — the presence of `#output` directives determines the mode. No mode declaration needed.
+
+**Single-file** — template has no `#output` directives. All output goes to the file named by `--output` on the CLI, or to stdout:
+
+```
+<?yt delim="<% %>" ?>
+public class <%pascal name%>
+{
+    <%#each fields as fname, f%>
+    public <%csharp_type[f.type]%> <%pascal fname%> { get; set; }
+    <%/each%>
+}
+```
+
+```bash
+yeetcode generate --template simple.yt --output Widget.cs
+```
+
+**Multi-file** — template uses `#output` directives. Each `#output` block routes content to a named file under `--outdir`:
 
 ```
 <?yt delim="<% %>" ?>
@@ -445,6 +557,19 @@ public class <%pascal msg_name%> {
 
 <%/each%>
 ```
+
+```bash
+yeetcode generate --template multi.yt --outdir ./generated/
+```
+
+**Error rules** — no footguns:
+
+| Situation | Result |
+|---|---|
+| Template has `#output` but CLI passes `--output` | Error: "multi-file template requires --outdir" |
+| Template has `#output` and content outside any `#output` block | Error: "content outside #output in multi-file template" |
+| Template has no `#output` but CLI passes `--outdir` | OK — writes single output to `--outdir/` with default name |
+| Template has `#output` and CLI passes `--outdir` | OK — each `#output` creates a file under `--outdir` |
 
 ### Template Directives
 
@@ -600,13 +725,41 @@ Produces: `int x, string y, float z` — separator emitted between items, not af
 ## 4. Command Line
 
 ```bash
-# Full pipeline — parse input, validate against schema, generate output
+# Full pipeline — single-file output
+yeetcode generate \
+  --schema schema.hjson \
+  --grammar grammar.yeet \
+  --input source.txt \
+  --template template.yt \
+  --functions functions.hjson \
+  --output result.cs
+
+# Full pipeline — multi-file output (template uses #output directives)
 yeetcode generate \
   --schema schema.hjson \
   --grammar grammar.yeet \
   --input source.proto \
   --template template.yt \
   --functions functions.hjson \
+  --outdir ./generated/
+
+# With grammar parameters
+yeetcode generate \
+  --schema schema.hjson \
+  --grammar proto.grammar.yeet \
+  --define syntax=proto3 \
+  --input widgets.proto \
+  --template proto-csharp.yt \
+  --outdir ./generated/
+
+# With import search paths (for grammars using %parse_file)
+yeetcode generate \
+  --schema schema.hjson \
+  --grammar proto.grammar.yeet \
+  --input widgets.proto \
+  --import-path ./proto/ \
+  --import-path /usr/share/proto/ \
+  --template proto-csharp.yt \
   --outdir ./generated/
 
 # Parse only — produce validated HJSON from input
