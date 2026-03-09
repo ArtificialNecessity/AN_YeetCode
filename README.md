@@ -1,6 +1,6 @@
 # YeetCode & YeetJson
 
-**Yeet one language into another.** - HJSon and J**son Parsing with errors your AI will love as much as you will.**
+**Yeet one language into another.   -   HJSon and Json Parsing with errors your AI will love as much as you will.**
 
 YeetCode is a schema-driven meta-programming tool for language-to-language transformation. It parses custom syntax into validated HJSON, then generates multi-file output through templates.
 
