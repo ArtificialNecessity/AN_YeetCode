@@ -33,8 +33,8 @@ public class GrammarParser
             if (CurrentToken.Type == TokenType.DirectiveSkip)
             {
                 Advance(); // %skip
-                Expect(TokenType.Colon, "':' after %skip");
-                var regexToken = Expect(TokenType.RegexPattern, "regex pattern after %skip:");
+                Expect(TokenType.DefinitionAssign, "'::=' after %skip");
+                var regexToken = Expect(TokenType.RegexPattern, "regex pattern after %skip ::=");
                 skipPattern = regexToken.Text;
                 continue;
             }
@@ -81,7 +81,7 @@ public class GrammarParser
     {
         int ruleLine = CurrentToken.Line;
         string ruleName = Expect(TokenType.RuleName, "rule name").Text;
-        Expect(TokenType.Colon, "':' after rule name");
+        Expect(TokenType.DefinitionAssign, "'::=' after rule name");
 
         var ruleExpression = ParseChoiceExpression();
         var typeMappings = new List<TypeMapping>();
@@ -107,7 +107,7 @@ public class GrammarParser
     {
         int tokenLine = CurrentToken.Line;
         string tokenName = Expect(TokenType.TokenName, "token name").Text;
-        Expect(TokenType.Colon, "':' after token name");
+        Expect(TokenType.DefinitionAssign, "'::=' after token name");
 
         var regexToken = Expect(TokenType.RegexPattern, "regex pattern after token name");
 
@@ -280,10 +280,35 @@ public class GrammarParser
 
     private bool IsSequenceTerminator()
     {
-        return CurrentToken.Type == TokenType.Pipe ||
-               CurrentToken.Type == TokenType.RightParen ||
-               CurrentToken.Type == TokenType.Arrow ||
-               IsAtEnd();
+        // Stop at: |, ), ->, ::=, EOF
+        if (CurrentToken.Type == TokenType.Pipe ||
+            CurrentToken.Type == TokenType.RightParen ||
+            CurrentToken.Type == TokenType.Arrow ||
+            CurrentToken.Type == TokenType.DefinitionAssign ||
+            IsAtEnd())
+        {
+            return true;
+        }
+
+        // Stop at directives
+        if (CurrentToken.Type == TokenType.DirectiveSkip ||
+            CurrentToken.Type == TokenType.DirectiveDefine ||
+            CurrentToken.Type == TokenType.DirectiveIf ||
+            CurrentToken.Type == TokenType.DirectiveElse ||
+            CurrentToken.Type == TokenType.DirectiveEndif)
+        {
+            return true;
+        }
+
+        // Stop at new rule/token definition: name/TOKEN followed by ::=
+        if ((CurrentToken.Type == TokenType.RuleName || CurrentToken.Type == TokenType.TokenName) &&
+            _currentTokenIndex + 1 < _allTokens.Count &&
+            _allTokens[_currentTokenIndex + 1].Type == TokenType.DefinitionAssign)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

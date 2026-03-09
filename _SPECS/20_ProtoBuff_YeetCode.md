@@ -13,8 +13,8 @@ sideways at the enums map.
   @Field: {
     type: string              # int32, string, Widget, WidgetType — anything
     tag: int
-    label: string = "optional"  # required, optional, repeated
-    deprecated: bool = false
+    label [default:optional]: string
+    deprecated [default:false]: bool
   }
 
   @MapField: {
@@ -31,8 +31,8 @@ sideways at the enums map.
   @RpcMethod: {
     input: string
     output: string
-    client_streaming: bool = false
-    server_streaming: bool = false
+    client_streaming [default:false]: bool
+    server_streaming [default:false]: bool
   }
 
   @Option: {
@@ -41,7 +41,7 @@ sideways at the enums map.
 
   # ── Document root ─────────────────────────────
 
-  syntax: string = "proto3"
+  syntax [default:proto3]: string
   package: string?
   imports: [string]?
   options: {@Option}?
@@ -171,17 +171,17 @@ Notes:
 # Top level
 # ═══════════════════════════════════════════════
 
-file: syntax_decl import_decl* package_decl? file_option*
+file ::= syntax_decl import_decl* package_decl? file_option*
       (message_decl | enum_decl | service_decl)*
 
-syntax_decl: "syntax" "=" syntax:QUOTED_STRING ";"
+syntax_decl ::= "syntax" "=" syntax:QUOTED_STRING ";"
 
-package_decl: "package" package:PACKAGE_NAME ";"
+package_decl ::= "package" package:PACKAGE_NAME ";"
 
-import_decl: "import" ("weak" | "public")? path:QUOTED_STRING ";"
+import_decl ::= "import" ("weak" | "public")? path:QUOTED_STRING ";"
   -> imports[]
 
-file_option: "option" name:OPTION_NAME "=" value:OPTION_VALUE ";"
+file_option ::= "option" name:OPTION_NAME "=" value:OPTION_VALUE ";"
   -> options[name]
   -> @Option
 
@@ -189,65 +189,65 @@ file_option: "option" name:OPTION_NAME "=" value:OPTION_VALUE ";"
 # Enums — flat map of name → number
 # ═══════════════════════════════════════════════
 
-enum_decl: "enum" name:IDENT "{" enum_body* "}"
+enum_decl ::= "enum" name:IDENT "{" enum_body* "}"
   -> enums[name]
 
-enum_body: enum_value | option_decl | reserved_decl | ";"
+enum_body ::= enum_value | option_decl | reserved_decl | ";"
 
-enum_value: vname:IDENT "=" number:INT field_options? ";"
+enum_value ::= vname:IDENT "=" number:INT field_options? ";"
   -> enums[name][vname] = number
 
 # ═══════════════════════════════════════════════
 # Messages — map of name → message structure
 # ═══════════════════════════════════════════════
 
-message_decl: "message" name:IDENT "{" message_body* "}"
+message_decl ::= "message" name:IDENT "{" message_body* "}"
   -> messages[name]
 
-message_body: field_decl | map_decl | oneof_decl
+message_body ::= field_decl | map_decl | oneof_decl
             | nested_message | nested_enum
             | reserved_decl | option_decl | ";"
 
-field_decl: label:LABEL? type:IDENT fname:IDENT "=" tag:INT field_options? ";"
+field_decl ::= label:LABEL? type:IDENT fname:IDENT "=" tag:INT field_options? ";"
   -> messages[name].fields[fname]
   -> @Field
 
-map_decl: "map" "<" key_type:MAP_KEY_TYPE "," value_type:IDENT ">"
+map_decl ::= "map" "<" key_type:MAP_KEY_TYPE "," value_type:IDENT ">"
           fname:IDENT "=" tag:INT field_options? ";"
   -> messages[name].maps[fname]
   -> @MapField
 
-oneof_decl: "oneof" oname:IDENT "{" oneof_branch+ "}"
+oneof_decl ::= "oneof" oname:IDENT "{" oneof_branch+ "}"
 
-oneof_branch: type:IDENT bname:IDENT "=" tag:INT ";"
+oneof_branch ::= type:IDENT bname:IDENT "=" tag:INT ";"
   -> messages[name].oneofs[oname][bname]
   -> @OneofBranch
 
-nested_message: "message" nname:IDENT "{" message_body* "}"
+nested_message ::= "message" nname:IDENT "{" message_body* "}"
   -> messages[name].nested_messages[nname]
 
-nested_enum: "enum" ename:IDENT "{" enum_body* "}"
+nested_enum ::= "enum" ename:IDENT "{" enum_body* "}"
   -> messages[name].nested_enums[ename]
 
-reserved_decl: "reserved" reserved_ranges ";"
-reserved_ranges: reserved_range ("," reserved_range)*
-reserved_range: INT ("to" (INT | "max"))? | QUOTED_STRING
+reserved_decl ::= "reserved" reserved_ranges ";"
+reserved_ranges ::= reserved_range ("," reserved_range)*
+reserved_range ::= INT ("to" (INT | "max"))? | QUOTED_STRING
 
-option_decl: "option" name:OPTION_NAME "=" value:OPTION_VALUE ";"
+option_decl ::= "option" name:OPTION_NAME "=" value:OPTION_VALUE ";"
 
-field_options: "[" field_option ("," field_option)* "]"
-field_option: OPTION_NAME "=" OPTION_VALUE
+field_options ::= "[" field_option ("," field_option)* "]"
+field_option ::= OPTION_NAME "=" OPTION_VALUE
 
 # ═══════════════════════════════════════════════
 # Services — map of name → map of method name → method
 # ═══════════════════════════════════════════════
 
-service_decl: "service" name:IDENT "{" service_body* "}"
+service_decl ::= "service" name:IDENT "{" service_body* "}"
   -> services[name]
 
-service_body: rpc_decl | option_decl | ";"
+service_body ::= rpc_decl | option_decl | ";"
 
-rpc_decl: "rpc" mname:IDENT
+rpc_decl ::= "rpc" mname:IDENT
           "(" client_streaming:"stream"? input:QUALIFIED_IDENT ")"
           "returns"
           "(" server_streaming:"stream"? output:QUALIFIED_IDENT ")"
@@ -259,21 +259,21 @@ rpc_decl: "rpc" mname:IDENT
 # Lexer
 # ═══════════════════════════════════════════════
 
-LABEL: "required" | "optional" | "repeated"
-SCALAR_TYPE: "double" | "float" | "int32" | "int64" | "uint32" | "uint64"
+LABEL ::= "required" | "optional" | "repeated"
+SCALAR_TYPE ::= "double" | "float" | "int32" | "int64" | "uint32" | "uint64"
            | "sint32" | "sint64" | "fixed32" | "fixed64" | "sfixed32" | "sfixed64"
            | "bool" | "string" | "bytes"
-MAP_KEY_TYPE: "int32" | "int64" | "uint32" | "uint64" | "sint32" | "sint64"
+MAP_KEY_TYPE ::= "int32" | "int64" | "uint32" | "uint64" | "sint32" | "sint64"
             | "fixed32" | "fixed64" | "sfixed32" | "sfixed64" | "bool" | "string"
-IDENT: /[a-zA-Z_][a-zA-Z0-9_]*/
-QUALIFIED_IDENT: /\.?[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*/
-PACKAGE_NAME: /[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*/
-INT: /-?(?:0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)/
-QUOTED_STRING: /"(?:[^"\\]|\\.)*"/
-OPTION_NAME: /\(?[a-zA-Z_][a-zA-Z0-9_.]*\)?(\.[a-zA-Z_][a-zA-Z0-9_]*)*/
-OPTION_VALUE: /(?:"(?:[^"\\]|\\.)*"|[a-zA-Z_][a-zA-Z0-9_]*|-?[0-9]+(?:\.[0-9]+)?)/
+IDENT ::= /[a-zA-Z_][a-zA-Z0-9_]*/
+QUALIFIED_IDENT ::= /\.?[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*/
+PACKAGE_NAME ::= /[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)*/
+INT ::= /-?(?:0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)/
+QUOTED_STRING ::= /"(?:[^"\\]|\\.)*"/
+OPTION_NAME ::= /\(?[a-zA-Z_][a-zA-Z0-9_.]*\)?(\.[a-zA-Z_][a-zA-Z0-9_]*)*/
+OPTION_VALUE ::= /(?:"(?:[^"\\]|\\.)*"|[a-zA-Z_][a-zA-Z0-9_]*|-?[0-9]+(?:\.[0-9]+)?)/
 
-%skip: /(?:\s|\/\/[^\n]*|\/\*[\s\S]*?\*\/)*/
+%skip ::= /(?:\s|\/\/[^\n]*|\/\*[\s\S]*?\*\/)*/
 ```
 
 Key grammar changes:

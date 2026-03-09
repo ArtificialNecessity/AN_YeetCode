@@ -69,7 +69,40 @@ public class Widget
 }
 ```
 
+---
+
 ## How YeetCode Gets There
+
+YeetCode transforms the input through three artifacts: a **grammar** (parses input), a **schema** (validates data shape), and a **template** (generates output).
+
+### Grammar (`proto.grammar.yeet`)
+
+Parses the input syntax into structured data:
+
+```
+# Simplified protobuf grammar
+file ::= syntax_decl? package_decl? message*
+
+syntax_decl ::= "syntax" "=" version:QUOTED_STRING ";"
+
+package_decl ::= "package" package:IDENT ";"
+
+message ::= "message" name:IDENT "{" fields:field* "}"
+  -> messages[name]
+
+field ::= label:LABEL? type:IDENT name:IDENT "=" tag:INT ";"
+  -> messages[].fields[name]
+  -> @Field
+
+LABEL ::= "required" | "optional" | "repeated"
+IDENT ::= /[a-zA-Z_][a-zA-Z0-9_.]*/
+INT ::= /[0-9]+/
+QUOTED_STRING ::= /"[^"]*"/
+
+%skip ::= /\s+/
+```
+
+The `->` arrows map parsed data into the schema structure. `messages[name]` inserts into a map keyed by the captured `name`. `@Field` creates an instance of the `@Field` type.
 
 ### 1. Schema (`proto.schema.ytson`)
 

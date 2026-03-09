@@ -417,18 +417,30 @@ public class HjsonContentParser
             if (_position < _sourceText.Length && _sourceText[_position] == ':')
             {
                 Advance(); // skip ':'
-                int attrValueStart = _position;
-                while (_position < _sourceText.Length)
+                SkipWhitespaceAndComments();
+                
+                // Check if value is a quoted string
+                if (_position < _sourceText.Length && _sourceText[_position] == '"')
                 {
-                    char valChar = _sourceText[_position];
-                    if (valChar == ',' || valChar == ']' ||
-                        valChar == '\n' || valChar == '\r') {
-                        break;
-                    }
-                    Advance();
+                    string quotedAttributeValue = ReadQuotedString();
+                    parsedAttributes[attributeName] = quotedAttributeValue;
                 }
-                string attributeValue = _sourceText[attrValueStart.._position].Trim();
-                parsedAttributes[attributeName] = attributeValue;
+                else
+                {
+                    // Unquoted value — read until comma, bracket, or newline
+                    int attrValueStart = _position;
+                    while (_position < _sourceText.Length)
+                    {
+                        char valChar = _sourceText[_position];
+                        if (valChar == ',' || valChar == ']' ||
+                            valChar == '\n' || valChar == '\r') {
+                            break;
+                        }
+                        Advance();
+                    }
+                    string attributeValue = _sourceText[attrValueStart.._position].Trim();
+                    parsedAttributes[attributeName] = attributeValue;
+                }
             }
             else
             {

@@ -146,30 +146,30 @@ its own grammar format to describe its own grammar format.
 # Top level
 # ═══════════════════════════════════════════════
 
-file: (rule_def | token_def | skip_def)*
+file ::= (rule_def | token_def | skip_def)*
 
-rule_def: name:RULE_NAME ":" expr:choice_expr mapping*
+rule_def ::= name:RULE_NAME "::=" expr:choice_expr mapping*
   -> rules[name]
   -> @Rule
 
-token_def: name:TOKEN_NAME ":" pattern:REGEX flags:REGEX_FLAGS?
+token_def ::= name:TOKEN_NAME "::=" pattern:REGEX flags:REGEX_FLAGS?
   -> tokens[name]
   -> @Token
 
-skip_def: "%skip:" pattern:REGEX
+skip_def ::= "%skip" "::=" pattern:REGEX
 
 # ═══════════════════════════════════════════════
 # Expressions (precedence: choice < sequence < unary)
 # ═══════════════════════════════════════════════
 
-choice_expr: first:sequence_expr ("|" rest:sequence_expr)+
+choice_expr ::= first:sequence_expr ("|" rest:sequence_expr)+
   -> @Expr { kind: @Choice }
            | sequence_expr
 
-sequence_expr: elements:unary_expr+
+sequence_expr ::= elements:unary_expr+
   -> @Expr { kind: @Sequence }
 
-unary_expr: primary_expr "*"
+unary_expr ::= primary_expr "*"
   -> @Expr { kind: @Repeat }
   -> @Repeat { mode: "zero_or_more" }
           | primary_expr "+"
@@ -180,51 +180,51 @@ unary_expr: primary_expr "*"
   -> @Repeat { mode: "optional" }
           | primary_expr
 
-primary_expr: capture_expr | literal_expr | token_ref_expr
+primary_expr ::= capture_expr | literal_expr | token_ref_expr
             | rule_ref_expr | group_expr
 
-capture_expr: name:RULE_NAME ":" expr:unary_expr
+capture_expr ::= name:RULE_NAME ":" expr:unary_expr
   -> @Expr { kind: @Capture }
 
-literal_expr: value:QUOTED_STRING
+literal_expr ::= value:QUOTED_STRING
   -> @Expr { kind: @Literal }
 
-token_ref_expr: name:TOKEN_NAME
+token_ref_expr ::= name:TOKEN_NAME
   -> @Expr { kind: @TokenRef }
 
-rule_ref_expr: name:RULE_NAME
+rule_ref_expr ::= name:RULE_NAME
   -> @Expr { kind: @RuleRef }
 
-group_expr: "(" expr:choice_expr ")"
+group_expr ::= "(" expr:choice_expr ")"
   -> @Expr { kind: @Group }
 
 # ═══════════════════════════════════════════════
 # Type mappings (-> arrows)
 # ═══════════════════════════════════════════════
 
-mapping: "->" mapping_body
+mapping ::= "->" mapping_body
 
-mapping_body: path_mapping | type_mapping
+mapping_body ::= path_mapping | type_mapping
 
-path_mapping: path:SCHEMA_PATH
+path_mapping ::= path:SCHEMA_PATH
   -> @TypeMapping
 
-type_mapping: target_type:TYPE_REF ("{" "kind:" kind_value:TYPE_REF "}")?
+type_mapping ::= target_type:TYPE_REF ("{" "kind:" kind_value:TYPE_REF "}")?
   -> @TypeMapping
 
 # ═══════════════════════════════════════════════
 # Lexer
 # ═══════════════════════════════════════════════
 
-RULE_NAME: /[a-z_][a-z0-9_]*/
-TOKEN_NAME: /[A-Z_][A-Z0-9_]*/
-TYPE_REF: /@[A-Z][a-zA-Z0-9]*/
-SCHEMA_PATH: /[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*(\[\w+\])*/
-QUOTED_STRING: /"(?:[^"\\]|\\.)*"/
-REGEX: /\/(?:[^\/\\]|\\.)*\/[a-z]*/
-REGEX_FLAGS: /[a-z]+/
+RULE_NAME ::= /[a-z_][a-z0-9_]*/
+TOKEN_NAME ::= /[A-Z_][A-Z0-9_]*/
+TYPE_REF ::= /@[A-Z][a-zA-Z0-9]*/
+SCHEMA_PATH ::= /[a-z_][a-z0-9_]*(\.[a-z_][a-z0-9_]*)*(\[\w+\])*/
+QUOTED_STRING ::= /"(?:[^"\\]|\\.)*"/
+REGEX ::= /\/(?:[^\/\\]|\\.)*\/[a-z]*/
+REGEX_FLAGS ::= /[a-z]+/
 
-%skip: /(?:\s|#[^\n]*)*/
+%skip ::= /(?:\s|#[^\n]*)*/
 ```
 
 ---
@@ -536,17 +536,17 @@ Given this grammar:
 ```
 # simple_calc.grammar.yeet
 
-expr: term (("+" | "-") term)*
+expr ::= term (("+" | "-") term)*
 
-term: factor (("*" | "/") factor)*
+term ::= factor (("*" | "/") factor)*
 
-factor: number | "(" expr ")"
+factor ::= number | "(" expr ")"
 
-number: value:NUMBER
+number ::= value:NUMBER
 
-NUMBER: /[0-9]+(\.[0-9]+)?/
+NUMBER ::= /[0-9]+(\.[0-9]+)?/
 
-%skip: /\s*/
+%skip ::= /\s*/
 ```
 
 The parser generator produces:

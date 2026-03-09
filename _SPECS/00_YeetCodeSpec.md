@@ -48,7 +48,7 @@ The `@` prefix defines and references user types. In a key position it declares 
     name: string
     type: string
     tag: int
-    label: string = "optional"    # default value
+    label [default:optional]: string
   }
 
   # Reference: fields contains an array of @MessageField
@@ -67,7 +67,7 @@ A trailing `?` marks a field or type as optional. Non-optional fields are guaran
 {
   @Function: {
     name: string                # required — always present
-    return_type: string = "void"  # required, has default
+    return_type [default:void]: string  # required, has default
     doc_comment: string?        # optional — may be absent
     params: [{
       name: string
@@ -208,7 +208,7 @@ public enum <%pascal name%> { ... }
 In grammars, the `[name]` path notation maps parsed data into map keys:
 
 ```
-enum_decl: "enum" name:IDENT "{" enum_body* "}"
+enum_decl ::= "enum" name:IDENT "{" enum_body* "}"
   -> enums[name]
 ```
 
@@ -221,9 +221,9 @@ enum_decl: "enum" name:IDENT "{" enum_body* "}"
   @Field: {
     name: string
     type: string
-    label: string = "optional"
-    deprecated: bool = false
-    wire_type: string = "varint"
+    label [default:optional]: string
+    deprecated [default:false]: bool
+    wire_type [default:varint]: string
   }
 }
 ```
@@ -238,13 +238,13 @@ Yeetcode grammars are PEG (Parsing Expression Grammars) with named captures and 
 
 ```
 # Rules — lowercase names
-rule_name: expression
+rule_name ::= expression
 
 # Lexer tokens — UPPERCASE names
-TOKEN_NAME: /regex/
+TOKEN_NAME ::= /regex/
 
 # Implicit whitespace/comment skipping
-%skip: /pattern/
+%skip ::= /pattern/
 ```
 
 ### Grammar Directives
@@ -281,17 +281,17 @@ The `->` arrow maps a rule's output to a schema type. Named captures auto-map to
 
 ```
 # Simple — captures map to @MessageField.name, @MessageField.type, etc.
-field: label:LABEL? type:IDENT name:IDENT "=" tag:INT ";"
+field ::= label:LABEL? type:IDENT name:IDENT "=" tag:INT ";"
   -> @MessageField
 
 # With discriminator — kind references the variant @Type
-binary: left:expression op:OP right:expression
+binary ::= left:expression op:OP right:expression
   -> @Expression { kind: @Binary }
 
-call: function:IDENT "(" args:expression_list ")"
+call ::= function:IDENT "(" args:expression_list ")"
   -> @Expression { kind: @Call }
 
-literal: value:LITERAL
+literal ::= value:LITERAL
   -> @Expression { kind: @Literal }
 ```
 
@@ -309,14 +309,14 @@ When a rule specifies `-> @Type`, the following happens:
 For rules that populate nested positions in the document, use path notation:
 
 ```
-file: package_decl? (message | enum)*
+file ::= package_decl? (message | enum)*
 
-package_decl: "package" package:IDENT ";"
+package_decl ::= "package" package:IDENT ";"
 
-message: "message" name:IDENT "{" fields:field* "}"
+message ::= "message" name:IDENT "{" fields:field* "}"
   -> messages[]
 
-field: label:LABEL? type:IDENT name:IDENT "=" tag:INT ";"
+field ::= label:LABEL? type:IDENT name:IDENT "=" tag:INT ";"
   -> messages[].fields[]
 ```
 
@@ -384,7 +384,7 @@ yeetcode generate --grammar proto.grammar.yeet --define syntax=proto3 ...
 
 ```
 # Protobuf-style: imported enums/messages merge into the global namespace
-import_decl: "import" path:QUOTED_STRING ";"
+import_decl ::= "import" path:QUOTED_STRING ";"
   %parse_file(path, now, skip, _)
   -> imports[]
 ```
@@ -395,7 +395,7 @@ Importing `google/protobuf/timestamp.proto` parses that file, and its `enums`, `
 
 ```
 # Namespace-style: each imported file lands under its own key
-import_decl: "import" path:QUOTED_STRING ";"
+import_decl ::= "import" path:QUOTED_STRING ";"
   %parse_file(path, now, skip, dependencies[path])
   -> imports[]
 ```
@@ -406,7 +406,7 @@ The imported file's entire tree lands at `dependencies["google/protobuf/timestam
 
 ```
 # Merge into a shared section
-include_decl: "include" path:QUOTED_STRING ";"
+include_decl ::= "include" path:QUOTED_STRING ";"
   %parse_file(path, now, skip, includes.shared_types)
 ```
 
@@ -435,15 +435,15 @@ When a rule has alternatives that produce different types or variants:
 
 - **Rule alternatives** that target different variants use per-alternative `->`:
   ```
-  expression: binary | call | literal
+  expression ::= binary | call | literal
 
-  binary: left:expression op:OP right:expression
+  binary ::= left:expression op:OP right:expression
     -> @Expression { kind: @Binary }
 
-  call: function:IDENT "(" args:expression_list ")"
+  call ::= function:IDENT "(" args:expression_list ")"
     -> @Expression { kind: @Call }
 
-  literal: value:LITERAL
+  literal ::= value:LITERAL
     -> @Expression { kind: @Literal }
   ```
 
@@ -452,34 +452,34 @@ When a rule has alternatives that produce different types or variants:
 ```
 # === Grammar for a protobuf-like language ===
 
-file: syntax_decl? package_decl? (message | enum)*
+file ::= syntax_decl? package_decl? (message | enum)*
 
-syntax_decl: "syntax" "=" version:QUOTED_STRING ";"
+syntax_decl ::= "syntax" "=" version:QUOTED_STRING ";"
 
-package_decl: "package" package:IDENT ";"
+package_decl ::= "package" package:IDENT ";"
 
-message: "message" name:IDENT "{" fields:field* "}"
+message ::= "message" name:IDENT "{" fields:field* "}"
   -> messages[]
 
-field: label:LABEL? type:IDENT name:IDENT "=" tag:INT options:field_options? ";"
+field ::= label:LABEL? type:IDENT name:IDENT "=" tag:INT options:field_options? ";"
   -> messages[].fields[]
 
-field_options: "[" option ("," option)* "]"
-option: key:IDENT "=" value:(IDENT | QUOTED_STRING | INT)
+field_options ::= "[" option ("," option)* "]"
+option ::= key:IDENT "=" value:(IDENT | QUOTED_STRING | INT)
 
-enum: "enum" name:IDENT "{" values:enum_value* "}"
+enum ::= "enum" name:IDENT "{" values:enum_value* "}"
   -> enums[]
 
-enum_value: name:IDENT "=" number:INT ";"
+enum_value ::= name:IDENT "=" number:INT ";"
   -> enums[].values[]
 
 # Lexer
-LABEL: "required" | "optional" | "repeated"
-IDENT: /[a-zA-Z_][a-zA-Z0-9_.]+/
-INT: /0|[1-9][0-9]*/
-QUOTED_STRING: /"(?:[^"\\]|\\.)*"/
+LABEL ::= "required" | "optional" | "repeated"
+IDENT ::= /[a-zA-Z_][a-zA-Z0-9_.]+/
+INT ::= /0|[1-9][0-9]*/
+QUOTED_STRING ::= /"(?:[^"\\]|\\.)*"/
 
-%skip: /(?:\s|\/\/[^\n]*|\/\*[\s\S]*?\*\/)*/
+%skip ::= /(?:\s|\/\/[^\n]*|\/\*[\s\S]*?\*\/)*/
 ```
 
 ---
@@ -801,12 +801,12 @@ yeetcode check \
   @Field: {
     type: string
     tag: int
-    label: string = "optional"
-    deprecated: bool = false
+    label [default:optional]: string
+    deprecated [default:false]: bool
   }
 
   package: string?
-  syntax: string = "proto3"
+  syntax [default:proto3]: string
   messages: {
     @: {
       fields: {@Field}

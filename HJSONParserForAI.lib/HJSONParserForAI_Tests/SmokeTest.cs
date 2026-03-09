@@ -77,4 +77,39 @@ public class SmokeTest
         Assert.True(rootElement.TryGetProperty("__keyAttributes", out var keyAttributesElement));
         Assert.Equal(JsonValueKind.Object, keyAttributesElement.ValueKind);
     }
+
+    [Fact]
+    public void TestKeyAttributesWithQuotedValues()
+    {
+        string hjsonWithQuotedAttributes = """
+        {
+            name [default:"a string with spaces and newlines \n\n", optional]: string
+            count [default:"42"]: int
+        }
+        """;
+
+        var structureResult = new StructuralAnalyzer().Analyze(hjsonWithQuotedAttributes);
+        var parser = new HjsonContentParser(new HjsonParserOptions { EmitKeyAttributes = true });
+        var parseResult = parser.Parse(hjsonWithQuotedAttributes, structureResult);
+
+        Assert.NotNull(parseResult.ParsedDocument);
+        Assert.Empty(parseResult.SemanticErrors);
+
+        var root = parseResult.ParsedDocument.RootElement;
+        
+        // Verify __keyAttributes exists
+        Assert.True(root.TryGetProperty("__keyAttributes", out var keyAttrs));
+        
+        // Verify name attributes
+        Assert.True(keyAttrs.TryGetProperty("name", out var nameAttrs));
+        Assert.True(nameAttrs.TryGetProperty("default", out var defaultAttr));
+        Assert.Equal("a string with spaces and newlines \n\n", defaultAttr.GetString());
+        Assert.True(nameAttrs.TryGetProperty("optional", out var optionalAttr));
+        Assert.True(optionalAttr.GetBoolean());
+        
+        // Verify count attributes
+        Assert.True(keyAttrs.TryGetProperty("count", out var countAttrs));
+        Assert.True(countAttrs.TryGetProperty("default", out var countDefault));
+        Assert.Equal("42", countDefault.GetString());
+    }
 }

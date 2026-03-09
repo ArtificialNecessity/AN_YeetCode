@@ -12,11 +12,11 @@ public class TestGrammarParser
     public void TestSimpleRuleParsing()
     {
         string grammarText = """
-        message: "message" name:IDENT "{" "}"
+        message ::= "message" name:IDENT "{" "}"
           -> @Message
         
-        IDENT: /[a-zA-Z_][a-zA-Z0-9_]*/
-        %skip: /\s+/
+        IDENT ::= /[a-zA-Z_][a-zA-Z0-9_]*/
+        %skip ::= /\s+/
         """;
 
         var lexer = new GrammarLexer(grammarText);
@@ -44,7 +44,7 @@ public class TestGrammarParser
     public void TestChoiceExpression()
     {
         string grammarText = """
-        primitive: "int32" | "string" | "bool"
+        primitive ::= "int32" | "string" | "bool"
         """;
 
         var lexer = new GrammarLexer(grammarText);
@@ -63,7 +63,7 @@ public class TestGrammarParser
     public void TestSequenceExpression()
     {
         string grammarText = """
-        field: label:LABEL type:IDENT name:IDENT "=" tag:INT ";"
+        field ::= label:LABEL type:IDENT name:IDENT "=" tag:INT ";"
         """;
 
         var lexer = new GrammarLexer(grammarText);
@@ -82,7 +82,7 @@ public class TestGrammarParser
     public void TestRepeatExpressions()
     {
         string grammarText = """
-        file: item* item+ item?
+        file ::= item* item+ item?
         """;
 
         var lexer = new GrammarLexer(grammarText);
@@ -109,7 +109,7 @@ public class TestGrammarParser
     public void TestCaptureExpression()
     {
         string grammarText = """
-        rule: name:IDENT
+        rule ::= name:IDENT
         """;
 
         var lexer = new GrammarLexer(grammarText);
@@ -129,7 +129,7 @@ public class TestGrammarParser
     public void TestGroupExpression()
     {
         string grammarText = """
-        expr: ("+" | "-") term
+        expr ::= ("+" | "-") term
         """;
 
         var lexer = new GrammarLexer(grammarText);
@@ -148,7 +148,7 @@ public class TestGrammarParser
     public void TestTypeMappingWithDiscriminator()
     {
         string grammarText = """
-        binary: left:expr op:OP right:expr
+        binary ::= left:expr op:OP right:expr
           -> @Expression { kind: @Binary }
         """;
 
@@ -169,7 +169,7 @@ public class TestGrammarParser
     public void TestArrayAppendMapping()
     {
         string grammarText = """
-        message: "message" name:IDENT "{" "}"
+        message ::= "message" name:IDENT "{" "}"
           -> messages[]
         """;
 
@@ -190,7 +190,7 @@ public class TestGrammarParser
     public void TestMapInsertMapping()
     {
         string grammarText = """
-        enum: "enum" name:IDENT "{" "}"
+        enum ::= "enum" name:IDENT "{" "}"
           -> enums[name]
         """;
 

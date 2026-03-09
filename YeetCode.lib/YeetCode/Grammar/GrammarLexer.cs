@@ -111,6 +111,14 @@ public class GrammarLexer
         int tokenStartColumn = _currentColumn;
         char firstChar = _grammarSourceText[_currentPosition];
 
+        // Three-character operator: ::=
+        if (firstChar == ':' && _currentPosition + 2 < _grammarSourceText.Length &&
+            _grammarSourceText.Substring(_currentPosition, 3) == "::=")
+        {
+            AdvancePosition(3);
+            return new GrammarToken { Type = TokenType.DefinitionAssign, Text = "::=", Line = tokenStartLine, Column = tokenStartColumn };
+        }
+
         // Single-character operators
         switch (firstChar)
         {
@@ -408,6 +416,7 @@ public enum TokenType
 
     // Operators
     Colon,              // :
+    DefinitionAssign,   // ::=
     Arrow,              // ->
     Pipe,               // |
     Star,               // *
