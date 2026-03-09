@@ -1,0 +1,24 @@
+{
+  package: com.example.test
+  syntax: proto3
+  messages: {
+    Person: {
+      fields: {
+        name: {
+          type: string
+          tag: 1
+        }
+        age: {
+          type: int32
+          tag: 2
+          label: optional
+        }
+        email: {
+          type: string
+          tag: 3
+          deprecated: true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+<?yt delim="<% %>" ?>
+<% each messages as msg_name, msg %>
+public class <% pascal msg_name %> {
+    <% each msg.fields as fname, f %>
+    public <% f.type %> <% pascal fname %> { get; set; }
+    <% /each %>
+}
+<% /each %>

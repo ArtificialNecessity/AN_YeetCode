@@ -500,28 +500,28 @@ Generating C# or JavaScript? Use `<% %>`. Generating XML? Use `{% %}`. Generatin
 
 ```
 <?yt delim="<% %>" ?>
-<%#each messages as msg_name, msg%>
-public class <%pascal msg_name%> {
-    <%#each msg.fields as fname, f%>
-    public <%csharp_type[f.type]%> <%pascal fname%> { get; set; }
-    <%/each%>
+<% each messages as msg_name, msg %>
+public class <% pascal msg_name %> {
+    <% each msg.fields as fname, f %>
+    public <% csharp_type[f.type] %> <% pascal fname %> { get; set; }
+    <% /each %>
 }
-<%/each%>
+<% /each %>
 ```
 
 ### Single-File vs Multi-File Output
 
 Output mode is implicit — the presence of `#output` directives determines the mode. No mode declaration needed.
 
-**Single-file** — template has no `#output` directives. All output goes to the file named by `--output` on the CLI, or to stdout:
+**Single-file** — template has no `output` directives. All output goes to the file named by `--output` on the CLI, or to stdout:
 
 ```
 <?yt delim="<% %>" ?>
-public class <%pascal name%>
+public class <% pascal name %>
 {
-    <%#each fields as fname, f%>
-    public <%csharp_type[f.type]%> <%pascal fname%> { get; set; }
-    <%/each%>
+    <% each fields as fname, f %>
+    public <% csharp_type[f.type] %> <% pascal fname %> { get; set; }
+    <% /each %>
 }
 ```
 
@@ -529,33 +529,33 @@ public class <%pascal name%>
 yeetcode generate --template simple.yt --output Widget.cs
 ```
 
-**Multi-file** — template uses `#output` directives. Each `#output` block routes content to a named file under `--outdir`:
+**Multi-file** — template uses `output` directives. Each `output` block routes content to a named file under `--outdir`:
 
 ```
 <?yt delim="<% %>" ?>
-<%#each messages as msg_name, msg%>
+<% each messages as msg_name, msg %>
 
-<%#output pascal(msg_name) + ".cs" %>
+<% output pascal(msg_name) + ".cs" %>
 using System;
 
-public class <%pascal msg_name%> {
-    <%#each msg.fields as fname, f%>
-    public <%csharp_type[f.type]%> <%pascal fname%> { get; set; }
-    <%/each%>
+public class <% pascal msg_name %> {
+    <% each msg.fields as fname, f %>
+    public <% csharp_type[f.type] %> <% pascal fname %> { get; set; }
+    <% /each %>
 }
-<%/output%>
+<% /output %>
 
-<%#output pascal(msg_name) + ".java" %>
-package <%package%>;
+<% output pascal(msg_name) + ".java" %>
+package <% package %>;
 
-public class <%pascal msg_name%> {
-    <%#each msg.fields as fname, f%>
-    private <%java_type[f.type]%> <%camel fname%>;
-    <%/each%>
+public class <% pascal msg_name %> {
+    <% each msg.fields as fname, f %>
+    private <% java_type[f.type] %> <% camel fname %>;
+    <% /each %>
 }
-<%/output%>
+<% /output %>
 
-<%/each%>
+<% /each %>
 ```
 
 ```bash
@@ -566,23 +566,25 @@ yeetcode generate --template multi.yt --outdir ./generated/
 
 | Situation | Result |
 |---|---|
-| Template has `#output` but CLI passes `--output` | Error: "multi-file template requires --outdir" |
-| Template has `#output` and content outside any `#output` block | Error: "content outside #output in multi-file template" |
-| Template has no `#output` but CLI passes `--outdir` | OK — writes single output to `--outdir/` with default name |
-| Template has `#output` and CLI passes `--outdir` | OK — each `#output` creates a file under `--outdir` |
+| Template has `output` but CLI passes `--output` | Error: "multi-file template requires --outdir" |
+| Template has `output` and content outside any `output` block | Error: "content outside output in multi-file template" |
+| Template has no `output` but CLI passes `--outdir` | OK — writes single output to `--outdir/` with default name |
+| Template has `output` and CLI passes `--outdir` | OK — each `output` creates a file under `--outdir` |
 
 ### Template Directives
 
+Directives are keyword-first inside delimiters. No `#` prefix needed — the parser recognizes directives by the leading keyword.
+
 | Directive | Purpose |
 |-----------|---------|
-| `#each array as item` | Iterate over an array |
-| `#each map as key, value` | Iterate over a map's key-value pairs |
-| `#if condition` | Conditional block |
-| `#elif condition` | Else-if branch |
-| `#else` | Else branch |
-| `#define name(args)` | Define a reusable template macro |
-| `#call name(args)` | Invoke a macro (supports recursion) |
-| `#output expr` | Direct output to a named file (expr is evaluated) |
+| `each array as item` | Iterate over an array |
+| `each map as key, value` | Iterate over a map's key-value pairs |
+| `if condition` | Conditional block |
+| `elif condition` | Else-if branch |
+| `else` | Else branch |
+| `define name(args)` | Define a reusable template macro |
+| `call name(args)` | Invoke a macro (supports recursion) |
+| `output expr` | Direct output to a named file (expr is evaluated) |
 | `/each`, `/if`, `/define`, `/output` | Close blocks |
 
 ### Value Expressions
