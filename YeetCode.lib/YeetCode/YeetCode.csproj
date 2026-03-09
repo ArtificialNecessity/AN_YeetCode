@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\HJSONParserForAI.lib\HJSONParserForAI\HJSONParserForAI.csproj" />
+    <ProjectReference Include="..\..\YeetJson.lib\YeetJson\YeetJson.csproj" />
   </ItemGroup>
 
 </Project>

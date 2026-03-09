@@ -1,5 +1,5 @@
 using System.Text.Json;
-using HJSONParserForAI.Core;
+using YeetJson;
 using YeetCode.Template;
 using Xunit;
 

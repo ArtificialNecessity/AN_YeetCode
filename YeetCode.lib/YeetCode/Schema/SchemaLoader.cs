@@ -1,7 +1,7 @@
 namespace YeetCode.Schema;
 
 using System.Text.Json;
-using HJSONParserForAI.Core;
+using YeetJson;
 
 /// <summary>
 /// Loads a .ytson schema file and produces a LoadedSchema containing
