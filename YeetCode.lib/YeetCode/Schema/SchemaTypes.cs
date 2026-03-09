@@ -73,8 +73,8 @@ public class SchemaFieldDefinition
     /// <summary>Whether this field is optional (marked with ? in schema)</summary>
     public bool IsOptional { get; set; }
 
-    /// <summary>Default value as a string (from "= value" in schema). Null if no default.</summary>
-    public string? DefaultValueText { get; init; }
+    /// <summary>Default value as a string (from [default:value] key attribute). Null if no default.</summary>
+    public string? DefaultValueText { get; set; }
 }
 
 /// <summary>

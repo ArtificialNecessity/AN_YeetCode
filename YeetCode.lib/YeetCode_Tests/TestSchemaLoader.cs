@@ -1,78 +1,66 @@
-#!/usr/bin/env dotnet run
-// Schema Loader smoke test
-// Run: dotnet run YeetCode.lib/YeetCode_Tests/TestSchemaLoader.cs
-
-#:project ../YeetCode/YeetCode.csproj
-
-using System;
-using System.IO;
 using YeetCode.Schema;
+using Xunit;
 
-string scriptDirectory = Path.GetDirectoryName(GetScriptPath())!;
-string testDataDirectory = Path.Combine(scriptDirectory, "TestData");
+namespace YeetCode_Tests;
 
-static string GetScriptPath([System.Runtime.CompilerServices.CallerFilePath] string path = "") => path;
-
-Console.WriteLine("=== Schema Loader Smoke Test ===\n");
-
-// Test: Load proto.schema.ytson
-string protoSchemaPath = Path.Combine(testDataDirectory, "proto.schema.ytson");
-Console.WriteLine($"Loading: {protoSchemaPath}");
-
-var loadedSchema = SchemaLoader.LoadFromFile(protoSchemaPath);
-
-Console.WriteLine($"\nType definitions: {loadedSchema.TypeDefinitions.Count}");
-foreach (var (typeName, typeDefinition) in loadedSchema.TypeDefinitions)
+/// <summary>
+/// Tests for SchemaLoader - loading and parsing .ytson schema files.
+/// </summary>
+public class TestSchemaLoader
 {
-    Console.WriteLine($"  @{typeName}:");
-    foreach (var (fieldName, fieldDefinition) in typeDefinition.FieldDefinitions)
+    private static string GetTestDataPath(string fileName)
     {
-        string optionalMarker = fieldDefinition.IsOptional ? "?" : "";
-        string defaultMarker = fieldDefinition.DefaultValueText != null
-            ? $" = {fieldDefinition.DefaultValueText}"
-            : "";
-        Console.WriteLine($"    {fieldName}: {fieldDefinition.FieldType}{optionalMarker}{defaultMarker}");
+        return Path.Combine("TestData", fileName);
+    }
+
+    [Fact]
+    public void TestLoadProtoSchema()
+    {
+        string schemaPath = GetTestDataPath("proto.schema.ytson");
+        var loadedSchema = SchemaLoader.LoadFromFile(schemaPath);
+
+        // Verify @Field type exists
+        Assert.True(loadedSchema.HasTypeDefinition("Field"));
+        var fieldTypeDef = loadedSchema.GetTypeDefinition("Field");
+
+        // Verify @Field has expected fields
+        Assert.True(fieldTypeDef.FieldDefinitions.ContainsKey("type"));
+        Assert.True(fieldTypeDef.FieldDefinitions.ContainsKey("tag"));
+        Assert.True(fieldTypeDef.FieldDefinitions.ContainsKey("label"));
+        Assert.True(fieldTypeDef.FieldDefinitions.ContainsKey("deprecated"));
+
+        // Verify defaults from key attributes
+        Assert.Equal("optional", fieldTypeDef.FieldDefinitions["label"].DefaultValueText);
+        Assert.Equal("false", fieldTypeDef.FieldDefinitions["deprecated"].DefaultValueText);
+
+        // Verify root fields
+        Assert.True(loadedSchema.RootFieldDefinitions.ContainsKey("package"));
+        Assert.True(loadedSchema.RootFieldDefinitions.ContainsKey("syntax"));
+        Assert.True(loadedSchema.RootFieldDefinitions.ContainsKey("messages"));
+        Assert.True(loadedSchema.RootFieldDefinitions.ContainsKey("enums"));
+
+        // Verify optionality
+        Assert.True(loadedSchema.RootFieldDefinitions["package"].IsOptional);
+        Assert.False(loadedSchema.RootFieldDefinitions["syntax"].IsOptional);
+        Assert.True(loadedSchema.RootFieldDefinitions["messages"].IsOptional);
+        Assert.True(loadedSchema.RootFieldDefinitions["enums"].IsOptional);
+
+        // Verify syntax has default
+        Assert.Equal("proto3", loadedSchema.RootFieldDefinitions["syntax"].DefaultValueText);
+    }
+
+    [Fact]
+    public void TestFieldTypeToString()
+    {
+        string schemaPath = GetTestDataPath("proto.schema.ytson");
+        var loadedSchema = SchemaLoader.LoadFromFile(schemaPath);
+
+        var fieldTypeDef = loadedSchema.GetTypeDefinition("Field");
+
+        // Verify type field is string
+        Assert.Equal("string", fieldTypeDef.FieldDefinitions["type"].FieldType.ToString());
+
+        // Verify tag field is int
+        Assert.Equal("int", fieldTypeDef.FieldDefinitions["tag"].FieldType.ToString());
     }
 }
-
-Console.WriteLine($"\nRoot field definitions: {loadedSchema.RootFieldDefinitions.Count}");
-foreach (var (fieldName, fieldDefinition) in loadedSchema.RootFieldDefinitions)
-{
-    string optionalMarker = fieldDefinition.IsOptional ? "?" : "";
-    string defaultMarker = fieldDefinition.DefaultValueText != null
-        ? $" = {fieldDefinition.DefaultValueText}"
-        : "";
-    Console.WriteLine($"  {fieldName}: {fieldDefinition.FieldType}{optionalMarker}{defaultMarker}");
-}
-
-// Verify expected structure
-Console.WriteLine("\n--- Verification ---");
-
-// Should have @Field type
-if (loadedSchema.HasTypeDefinition("Field"))
-{
-    Console.WriteLine("✅ @Field type exists");
-    var fieldType = loadedSchema.GetTypeDefinition("Field");
-    if (fieldType.FieldDefinitions.ContainsKey("type"))
-        Console.WriteLine("✅ @Field.type field exists");
-    if (fieldType.FieldDefinitions.ContainsKey("tag"))
-        Console.WriteLine("✅ @Field.tag field exists");
-    if (fieldType.FieldDefinitions["label"].DefaultValueText == "optional")
-        Console.WriteLine("✅ @Field.label has default 'optional'");
-    if (fieldType.FieldDefinitions["deprecated"].DefaultValueText == "false")
-        Console.WriteLine("✅ @Field.deprecated has default 'false'");
-}
-else
-{
-    Console.WriteLine("❌ @Field type NOT found");
-}
-
-// Should have root fields
-if (loadedSchema.RootFieldDefinitions.ContainsKey("package"))
-    Console.WriteLine("✅ Root field 'package' exists (optional: " +
-        loadedSchema.RootFieldDefinitions["package"].IsOptional + ")");
-if (loadedSchema.RootFieldDefinitions.ContainsKey("syntax"))
-    Console.WriteLine("✅ Root field 'syntax' exists (default: " +
-        loadedSchema.RootFieldDefinitions["syntax"].DefaultValueText + ")");
-
-Console.WriteLine("\n✅ Schema loader test complete!");

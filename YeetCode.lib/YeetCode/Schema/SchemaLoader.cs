@@ -11,8 +11,7 @@ using HJSONParserForAI.Core;
 ///   @TypeName: { field: type, ... }     — type definition
 ///   fieldName: type                      — root field
 ///   fieldName [optional]: type           — optional field (key attribute)
-///   fieldName: type = defaultValue       — field with default
-///   fieldName: type?                     — optional field (string suffix, for simple types)
+///   fieldName [default:value]: type      — field with default (key attribute)
 ///   [type]                               — array of type
 ///   {type}                               — map with value type
 ///   {}                                   — freeform object
@@ -99,10 +98,17 @@ public static class SchemaLoader
             {
                 var fieldDefinition = ParseFieldDefinitionFromValue(schemaProperty.Value, propertyName);
 
-                // Check key attributes for [optional]
-                if (rootKeyAttributes.TryGetValue(propertyName, out var fieldAttributes) &&
-                    fieldAttributes.ContainsKey("optional")) {
-                    fieldDefinition.IsOptional = true;
+                // Check key attributes for [optional] and [default:value]
+                if (rootKeyAttributes.TryGetValue(propertyName, out var fieldAttributes))
+                {
+                    if (fieldAttributes.ContainsKey("optional"))
+                    {
+                        fieldDefinition.IsOptional = true;
+                    }
+                    if (fieldAttributes.TryGetValue("default", out var defaultValue))
+                    {
+                        fieldDefinition.DefaultValueText = defaultValue;
+                    }
                 }
 
                 rootFieldDefinitions[propertyName] = fieldDefinition;
@@ -144,10 +150,17 @@ public static class SchemaLoader
 
             var fieldDefinition = ParseFieldDefinitionFromValue(fieldProperty.Value, fieldName);
 
-            // Check key attributes for [optional]
-            if (objectKeyAttributes.TryGetValue(fieldName, out var fieldAttributes) &&
-                fieldAttributes.ContainsKey("optional")) {
-                fieldDefinition.IsOptional = true;
+            // Check key attributes for [optional] and [default:value]
+            if (objectKeyAttributes.TryGetValue(fieldName, out var fieldAttributes))
+            {
+                if (fieldAttributes.ContainsKey("optional"))
+                {
+                    fieldDefinition.IsOptional = true;
+                }
+                if (fieldAttributes.TryGetValue("default", out var defaultValue))
+                {
+                    fieldDefinition.DefaultValueText = defaultValue;
+                }
             }
 
             fieldDefinitions[fieldName] = fieldDefinition;
@@ -168,7 +181,8 @@ public static class SchemaLoader
 
         if (objectElement.ValueKind != JsonValueKind.Object) return extractedAttributes;
 
-        if (!objectElement.TryGetProperty("__keyAttributes", out var keyAttributesElement)) {
+        if (!objectElement.TryGetProperty("__keyAttributes", out var keyAttributesElement))
+        {
             return extractedAttributes;
         }
 
@@ -179,8 +193,10 @@ public static class SchemaLoader
             string attributedKeyName = attributedKeyProperty.Name;
             var perKeyAttributes = new Dictionary<string, string>();
 
-            if (attributedKeyProperty.Value.ValueKind == JsonValueKind.Object) {
-                foreach (var attrProperty in attributedKeyProperty.Value.EnumerateObject()) {
+            if (attributedKeyProperty.Value.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var attrProperty in attributedKeyProperty.Value.EnumerateObject())
+                {
                     string attrValue = attrProperty.Value.ValueKind switch
                     {
                         JsonValueKind.True => "true",
@@ -228,41 +244,18 @@ public static class SchemaLoader
     }
 
     /// <summary>
-    /// Parse a type string like "string", "int?", "string = optional", "@TypeName", "@TypeName?"
+    /// Parse a type string like "string", "int", "@TypeName"
+    /// Optionality and defaults are handled via key attributes: [optional], [default:value]
     /// </summary>
     private static SchemaFieldDefinition ParseFieldDefinitionFromTypeString(string typeDescriptorText)
     {
-        string remainingText = typeDescriptorText.Trim();
-        bool isOptional = false;
-        string? defaultValueText = null;
-
-        // Check for default value: "type = defaultValue"
-        int equalsSignIndex = remainingText.IndexOf('=');
-        if (equalsSignIndex >= 0)
-        {
-            defaultValueText = remainingText[(equalsSignIndex + 1)..].Trim();
-            // Remove surrounding quotes from default value if present
-            if (defaultValueText.StartsWith('"') && defaultValueText.EndsWith('"'))
-            {
-                defaultValueText = defaultValueText[1..^1];
-            }
-            remainingText = remainingText[..equalsSignIndex].Trim();
-        }
-
-        // Check for optionality: "type?"
-        if (remainingText.EndsWith('?'))
-        {
-            isOptional = true;
-            remainingText = remainingText[..^1];
-        }
-
-        var fieldType = ParseTypeReference(remainingText);
+        string typeNameText = typeDescriptorText.Trim();
+        var fieldType = ParseTypeReference(typeNameText);
 
         return new SchemaFieldDefinition
         {
             FieldType = fieldType,
-            IsOptional = isOptional,
-            DefaultValueText = defaultValueText
+            IsOptional = false
         };
     }
 

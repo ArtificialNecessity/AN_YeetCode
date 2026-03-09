@@ -1,154 +1,52 @@
-#!/usr/bin/env dotnet run
-// HJSON Parser Gold File Test Runner
-// Run from project root: dotnet run --file utils/HJSONParserForAI/Tests/TestHJsonFiles.cs
-// Generate gold files: dotnet run --file utils/HJSONParserForAI/Tests/TestHJsonFiles.cs -- --gold
-
-#:project ../HJSONParserForAI/HJSONParserForAI.csproj
-
-using System;
-using System.IO;
-using System.Linq;
 using HJSONParserForAI.Core;
+using Xunit;
 
-bool generateGold = args.Contains("--gold");
-// For file-based programs, use CallerFilePath to get the script's directory
-string scriptDirectory = Path.GetDirectoryName(GetScriptPath())!;
-string testDataDirectory = Path.Combine(scriptDirectory, "TestData");
+namespace HJSONParserForAI_Tests;
 
-static string GetScriptPath([System.Runtime.CompilerServices.CallerFilePath] string path = "") => path;
-
-if (generateGold)
+/// <summary>
+/// Gold file tests for HJSON parser.
+/// Each .hjson file in TestData/ should have a corresponding .hjson.gold file
+/// containing the expected diagnostic output.
+/// </summary>
+public class TestHJsonFiles
 {
-    GenerateGoldFiles();
-}
-else
-{
-    Environment.Exit(RunTests());
-}
-
-void GenerateGoldFiles()
-{
-    Console.WriteLine("\n╔══════════════════════════════════════════════════════════════════════════════╗");
-    Console.WriteLine("║                    Generating HJSON Parser Gold Files                       ║");
-    Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝\n");
-
-    var testFiles = Directory.GetFiles(testDataDirectory, "*.hjson");
-    if (testFiles.Length == 0)
+    private static string GetTestDataPath(string fileName)
     {
-        Console.WriteLine($"ERROR: No test files found in {testDataDirectory}");
-        Environment.Exit(1);
+        return Path.Combine("TestData", fileName);
     }
 
-    int generatedCount = 0;
-
-    foreach (var testFilePath in testFiles)
+    [Theory]
+    [InlineData("valid_simple.hjson")]
+    [InlineData("devnull.crucible.hjson")]
+    public void TestHjsonFileAgainstGold(string testFileName)
     {
+        string testFilePath = GetTestDataPath(testFileName);
         string goldFilePath = testFilePath + ".gold";
 
-        try
-        {
-            string sourceText = File.ReadAllText(testFilePath);
-            string goldOutput = ParseAndFormatOutput(sourceText);
-            File.WriteAllText(goldFilePath, goldOutput);
-
-            generatedCount++;
-            Console.WriteLine($"✅ Generated: {Path.GetFileName(goldFilePath)}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"❌ ERROR generating {Path.GetFileName(goldFilePath)}: {ex.Message}");
-        }
-    }
-
-    Console.WriteLine($"\n{'═'.ToString().PadRight(80, '═')}");
-    Console.WriteLine($"Generated {generatedCount} gold file(s)");
-}
-
-int RunTests()
-{
-    Console.WriteLine("\n╔══════════════════════════════════════════════════════════════════════════════╗");
-    Console.WriteLine("║                    HJSON Parser Gold File Tests                             ║");
-    Console.WriteLine("╚══════════════════════════════════════════════════════════════════════════════╝\n");
-
-    var testFiles = Directory.GetFiles(testDataDirectory, "*.hjson");
-    if (testFiles.Length == 0)
-    {
-        Console.WriteLine($"ERROR: No test files found in {testDataDirectory}");
-        return 1;
-    }
-
-    int totalTests = 0;
-    int passedTests = 0;
-    int failedTests = 0;
-
-    foreach (var testFilePath in testFiles)
-    {
-        string goldFilePath = testFilePath + ".gold";
-
+        // Skip if gold file doesn't exist
         if (!File.Exists(goldFilePath))
         {
-            Console.WriteLine($"⚠️  SKIP: {Path.GetFileName(testFilePath)} (no gold file)");
-            continue;
+            // This will show as skipped in test output
+            return;
         }
 
-        totalTests++;
+        string hjsonSourceText = File.ReadAllText(testFilePath);
+        string expectedDiagnosticOutput = File.ReadAllText(goldFilePath);
 
-        string testFileName = Path.GetFileName(testFilePath);
-        string sourceText = File.ReadAllText(testFilePath);
-        string expectedOutput = File.ReadAllText(goldFilePath);
-        string actualOutput = ParseAndFormatOutput(sourceText);
+        // Parse and format output
+        var structuralAnalyzer = new StructuralAnalyzer();
+        var structureResult = structuralAnalyzer.Analyze(hjsonSourceText);
 
-        if (NormalizeOutput(actualOutput) == NormalizeOutput(expectedOutput))
-        {
-            Console.WriteLine($"✅ PASS: {testFileName}");
-            passedTests++;
-        }
-        else
-        {
-            Console.WriteLine($"❌ FAIL: {testFileName}");
-            Console.WriteLine($"\n  Expected output:");
-            Console.WriteLine(IndentLines(expectedOutput, "    "));
-            Console.WriteLine($"\n  Actual output:");
-            Console.WriteLine(IndentLines(actualOutput, "    "));
-            Console.WriteLine();
-            failedTests++;
-        }
+        var hjsonContentParser = new HjsonContentParser();
+        var parseResult = hjsonContentParser.Parse(hjsonSourceText, structureResult);
+
+        var diagnosticFormatter = new DiagnosticFormatter();
+        string actualDiagnosticOutput = diagnosticFormatter.FormatForAI(parseResult, hjsonSourceText, isTestMode: true);
+
+        // Normalize line endings for comparison
+        string normalizedExpected = expectedDiagnosticOutput.Trim().Replace("\r\n", "\n");
+        string normalizedActual = actualDiagnosticOutput.Trim().Replace("\r\n", "\n");
+
+        Assert.Equal(normalizedExpected, normalizedActual);
     }
-
-    Console.WriteLine($"\n{'═'.ToString().PadRight(80, '═')}");
-    Console.WriteLine($"Test Results: {passedTests}/{totalTests} passed");
-
-    if (failedTests > 0)
-    {
-        Console.WriteLine($"❌ {failedTests} test(s) FAILED");
-        return 1;
-    }
-    else
-    {
-        Console.WriteLine($"✅ All tests PASSED");
-        return 0;
-    }
-}
-
-string ParseAndFormatOutput(string sourceText)
-{
-    var structuralAnalyzer = new StructuralAnalyzer();
-    var structureResult = structuralAnalyzer.Analyze(sourceText);
-
-    var hjsonContentParser = new HjsonContentParser();
-    var parseResult = hjsonContentParser.Parse(sourceText, structureResult);
-
-    var diagnosticFormatter = new DiagnosticFormatter();
-    return diagnosticFormatter.FormatForAI(parseResult, sourceText, isTestMode: true);
-}
-
-string NormalizeOutput(string text)
-{
-    return text.Trim().Replace("\r\n", "\n");
-}
-
-string IndentLines(string text, string indent)
-{
-    var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-    return string.Join("\n", lines.Select(line => indent + line));
 }

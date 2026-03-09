@@ -25,11 +25,11 @@ grammar.yeet ──→ data.hjson ──→ template.yt ──→ output files
   @Field: {
     type: string
     tag: int
-    label: string = optional
+    label [optional, default:optional]: string
   }
 
   package [optional]: string
-  syntax: string = proto3
+  syntax [default:proto3]: string
   messages [optional]: {
     @: { fields: { @: @Field } }
   }
@@ -97,7 +97,7 @@ public class Widget {
 | `[type]` | Array |
 | `{ @: type }` | Map (named collection) |
 | `{}` | Freeform object |
-| `type = value` | Default value |
+| `[default:value]` | Default value (key attribute) |
 | `[optional]` | Key attribute — field may be absent |
 
 ### Template Syntax

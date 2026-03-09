@@ -1,120 +1,111 @@
-#!/usr/bin/env dotnet run
-// Schema Validator smoke test
-// Run: dotnet run YeetCode.lib/YeetCode_Tests/TestSchemaValidator.cs
-
-#:project ../YeetCode/YeetCode.csproj
-
-using System;
-using System.IO;
 using System.Text.Json;
 using HJSONParserForAI.Core;
 using YeetCode.Schema;
+using Xunit;
 
-string scriptDirectory = Path.GetDirectoryName(GetScriptPath())!;
-string testDataDirectory = Path.Combine(scriptDirectory, "TestData");
+namespace YeetCode_Tests;
 
-static string GetScriptPath([System.Runtime.CompilerServices.CallerFilePath] string path = "") => path;
-
-Console.WriteLine("=== Schema Validator Smoke Test ===\n");
-
-// Load schema
-string schemaPath = Path.Combine(testDataDirectory, "proto.schema.ytson");
-var loadedSchema = SchemaLoader.LoadFromFile(schemaPath);
-Console.WriteLine($"Schema loaded: {loadedSchema.TypeDefinitions.Count} types, {loadedSchema.RootFieldDefinitions.Count} root fields\n");
-
-// Test 1: Valid data with all fields
-Console.WriteLine("--- Test 1: Valid data (all fields present) ---");
-TestValidation(loadedSchema, Path.Combine(testDataDirectory, "proto_valid_data.hjson"));
-
-// Test 2: Data with defaults applied (missing optional fields)
-Console.WriteLine("--- Test 2: Minimal data (defaults should be applied) ---");
-string minimalData = """
+/// <summary>
+/// Tests for SchemaValidator - validating data against schemas and applying defaults.
+/// </summary>
+public class TestSchemaValidator
 {
-  syntax: proto3
-  messages: {
-    Empty: {
-      fields: {}
-    }
+  private static string GetTestDataPath(string fileName)
+  {
+    return Path.Combine("TestData", fileName);
   }
-}
-""";
-TestValidationFromString(loadedSchema, minimalData);
 
-// Test 3: Data missing required field 'syntax' (has default, so should work)
-Console.WriteLine("--- Test 3: Missing 'syntax' field (has default 'proto3') ---");
-string noSyntaxData = """
-{
-  messages: {
-    Test: {
-      fields: {}
-    }
-  }
-}
-""";
-TestValidationFromString(loadedSchema, noSyntaxData);
-
-// Test 4: Invalid data — wrong type
-Console.WriteLine("--- Test 4: Invalid data (wrong type for 'syntax') ---");
-string wrongTypeData = """
-{
-  syntax: 42
-  messages: {}
-}
-""";
-TestValidationFromString(loadedSchema, wrongTypeData, expectErrors: true);
-
-Console.WriteLine("\n✅ Schema validator test complete!");
-
-void TestValidation(LoadedSchema schema, string dataFilePath)
-{
-    string hjsonText = File.ReadAllText(dataFilePath);
-    TestValidationFromString(schema, hjsonText);
-}
-
-void TestValidationFromString(LoadedSchema schema, string hjsonText, bool expectErrors = false)
-{
-    // Parse HJSON to JsonDocument
+  private static JsonDocument ParseHjson(string hjsonText)
+  {
     var structuralAnalyzer = new StructuralAnalyzer();
     var structureResult = structuralAnalyzer.Analyze(hjsonText);
     var hjsonContentParser = new HjsonContentParser();
     var parseResult = hjsonContentParser.Parse(hjsonText, structureResult);
+    return parseResult.ParsedDocument!;
+  }
 
-    if (parseResult.ParsedDocument == null) {
-        Console.WriteLine("  ❌ HJSON parse failed\n");
-        return;
-    }
+  [Fact]
+  public void TestValidDataWithAllFields()
+  {
+    var loadedSchema = SchemaLoader.LoadFromFile(GetTestDataPath("proto.schema.ytson"));
+    string dataHjsonText = File.ReadAllText(GetTestDataPath("proto_valid_data.hjson"));
+    var dataDocument = ParseHjson(dataHjsonText);
 
-    // Validate
-    var validationErrors = SchemaValidator.Validate(parseResult.ParsedDocument, schema);
+    var validationErrors = SchemaValidator.Validate(dataDocument, loadedSchema);
+    Assert.Empty(validationErrors);
 
-    if (validationErrors.Count > 0) {
-        Console.WriteLine($"  Validation errors: {validationErrors.Count}");
-        foreach (var validationError in validationErrors) {
-            Console.WriteLine($"    • {validationError}");
+    // Should also work with ValidateAndApplyDefaults
+    var validatedDocument = SchemaValidator.ValidateAndApplyDefaults(dataDocument, loadedSchema);
+    Assert.NotNull(validatedDocument);
+  }
+
+  [Fact]
+  public void TestMinimalDataWithDefaults()
+  {
+    var loadedSchema = SchemaLoader.LoadFromFile(GetTestDataPath("proto.schema.ytson"));
+
+    string minimalHjson = """
+        {
+          messages: {
+            Empty: {
+              fields: {}
+            }
+          }
         }
-        if (!expectErrors) {
-            Console.WriteLine("  ❌ UNEXPECTED errors\n");
-        } else {
-            Console.WriteLine("  ✅ Errors expected and found\n");
+        """;
+
+    var dataDocument = ParseHjson(minimalHjson);
+    var validationErrors = SchemaValidator.Validate(dataDocument, loadedSchema);
+    Assert.Empty(validationErrors);
+
+    // Validate and apply defaults
+    var validatedDocument = SchemaValidator.ValidateAndApplyDefaults(dataDocument, loadedSchema);
+
+    // Should have 'syntax' field filled with default 'proto3'
+    Assert.True(validatedDocument.RootElement.TryGetProperty("syntax", out var syntaxElement));
+    Assert.Equal("proto3", syntaxElement.GetString());
+  }
+
+  [Fact]
+  public void TestMissingSyntaxFieldGetsDefault()
+  {
+    var loadedSchema = SchemaLoader.LoadFromFile(GetTestDataPath("proto.schema.ytson"));
+
+    string noSyntaxHjson = """
+        {
+          messages: {
+            Test: {
+              fields: {}
+            }
+          }
         }
-        return;
-    }
+        """;
 
-    if (expectErrors) {
-        Console.WriteLine("  ❌ Expected errors but got none\n");
-        return;
-    }
+    var dataDocument = ParseHjson(noSyntaxHjson);
+    var validatedDocument = SchemaValidator.ValidateAndApplyDefaults(dataDocument, loadedSchema);
 
-    Console.WriteLine("  ✅ Validation passed (no errors)");
+    // Should have 'syntax' filled with default
+    Assert.True(validatedDocument.RootElement.TryGetProperty("syntax", out var syntaxElement));
+    Assert.Equal("proto3", syntaxElement.GetString());
+  }
 
-    // Also test ValidateAndApplyDefaults
-    var validatedDocument = SchemaValidator.ValidateAndApplyDefaults(parseResult.ParsedDocument, schema);
-    using var prettyPrintStream = new MemoryStream();
-    using (var prettyPrintWriter = new Utf8JsonWriter(prettyPrintStream, new JsonWriterOptions { Indented = true })) {
-        validatedDocument.WriteTo(prettyPrintWriter);
-    }
-    string prettyJson = System.Text.Encoding.UTF8.GetString(prettyPrintStream.ToArray());
-    Console.WriteLine($"  Validated JSON ({prettyJson.Length} chars):");
-    Console.WriteLine(prettyJson);
-    Console.WriteLine();
+  [Fact]
+  public void TestWrongTypeThrowsValidationError()
+  {
+    var loadedSchema = SchemaLoader.LoadFromFile(GetTestDataPath("proto.schema.ytson"));
+
+    string wrongTypeHjson = """
+        {
+          syntax: 42
+          messages: {}
+        }
+        """;
+
+    var dataDocument = ParseHjson(wrongTypeHjson);
+    var validationErrors = SchemaValidator.Validate(dataDocument, loadedSchema);
+
+    // Should have validation error about wrong type
+    Assert.NotEmpty(validationErrors);
+    Assert.Contains(validationErrors, err => err.Contains("syntax") && err.Contains("string"));
+  }
 }

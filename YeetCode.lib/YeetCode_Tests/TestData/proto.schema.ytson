@@ -2,12 +2,12 @@
   @Field: {
     type: string
     tag: int
-    label: string = optional
-    deprecated: bool = false
+    label [optional, default:optional]: string
+    deprecated [default:false]: bool
   }
 
   package [optional]: string
-  syntax: string = proto3
+  syntax [default:proto3]: string
   messages [optional]: {
     @: {
       fields: {

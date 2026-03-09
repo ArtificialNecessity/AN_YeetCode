@@ -1,106 +1,80 @@
-#!/usr/bin/env dotnet run
-// Quick smoke test for the HJSON content parser
-// Run: dotnet run --project HJSONParserForAI.lib/HJSONParserForAI_Tests/SmokeTest.cs
-
-#:project ../HJSONParserForAI/HJSONParserForAI.csproj
-
-using System;
-using System.IO;
 using System.Text.Json;
 using HJSONParserForAI.Core;
+using Xunit;
 
-string scriptDirectory = Path.GetDirectoryName(GetScriptPath())!;
-string testDataDirectory = Path.Combine(scriptDirectory, "TestData");
+namespace HJSONParserForAI_Tests;
 
-static string GetScriptPath([System.Runtime.CompilerServices.CallerFilePath] string path = "") => path;
-
-Console.WriteLine("=== HJSON Content Parser Smoke Test ===\n");
-
-// Test 1: valid_simple.hjson
-TestFile("valid_simple.hjson");
-
-// Test 2: devnull.crucible.hjson
-TestFile("devnull.crucible.hjson");
-
-// Test 3: key_attributes.hjson — with EmitKeyAttributes enabled
-TestFileWithKeyAttributes("key_attributes.hjson");
-
-void TestFile(string fileName)
+/// <summary>
+/// Smoke tests for the HJSON content parser.
+/// Tests basic parsing functionality with valid HJSON files.
+/// </summary>
+public class SmokeTest
 {
-    string filePath = Path.Combine(testDataDirectory, fileName);
-    Console.WriteLine($"--- Testing: {fileName} ---");
-
-    string hjsonSourceText = File.ReadAllText(filePath);
-
-    // Phase 1: Structural analysis
-    var structuralAnalyzer = new StructuralAnalyzer();
-    var structureResult = structuralAnalyzer.Analyze(hjsonSourceText);
-
-    Console.WriteLine($"  Structural errors: {structureResult.StructuralErrors.Count}");
-    Console.WriteLine($"  Regions: {structureResult.Regions.Count}");
-
-    // Phase 2: Content parsing
-    var hjsonContentParser = new HjsonContentParser();
-    var parseResult = hjsonContentParser.Parse(hjsonSourceText, structureResult);
-
-    Console.WriteLine($"  Semantic errors: {parseResult.SemanticErrors.Count}");
-    Console.WriteLine($"  ParsedDocument: {(parseResult.ParsedDocument != null ? "YES" : "NULL")}");
-
-    if (parseResult.ParsedDocument != null)
+    private static string GetTestDataPath(string fileName)
     {
-        // Pretty-print the JSON output using Utf8JsonWriter (no reflection needed)
-        using var prettyPrintStream = new MemoryStream();
-        using (var prettyPrintWriter = new Utf8JsonWriter(prettyPrintStream, new JsonWriterOptions { Indented = true }))
-        {
-            parseResult.ParsedDocument.WriteTo(prettyPrintWriter);
-        }
-        string prettyJson = System.Text.Encoding.UTF8.GetString(prettyPrintStream.ToArray());
-        Console.WriteLine($"  JSON output ({prettyJson.Length} chars):");
-        Console.WriteLine(prettyJson);
+        return Path.Combine("TestData", fileName);
     }
 
-    foreach (var semanticError in parseResult.SemanticErrors)
+    [Fact]
+    public void TestValidSimpleHjson()
     {
-        Console.WriteLine($"  ERROR: [{semanticError.Kind}] {semanticError.Message} at line {semanticError.Line}");
+        string filePath = GetTestDataPath("valid_simple.hjson");
+        string hjsonSourceText = File.ReadAllText(filePath);
+
+        // Phase 1: Structural analysis
+        var structuralAnalyzer = new StructuralAnalyzer();
+        var structureResult = structuralAnalyzer.Analyze(hjsonSourceText);
+
+        Assert.Empty(structureResult.StructuralErrors);
+
+        // Phase 2: Content parsing
+        var hjsonContentParser = new HjsonContentParser();
+        var parseResult = hjsonContentParser.Parse(hjsonSourceText, structureResult);
+
+        Assert.Empty(parseResult.SemanticErrors);
+        Assert.NotNull(parseResult.ParsedDocument);
     }
 
-    Console.WriteLine();
-}
+    [Fact]
+    public void TestDevnullCrucibleHjson()
+    {
+        string filePath = GetTestDataPath("devnull.crucible.hjson");
+        string hjsonSourceText = File.ReadAllText(filePath);
 
-void TestFileWithKeyAttributes(string fileName)
-{
-    string filePath = Path.Combine(testDataDirectory, fileName);
-    Console.WriteLine($"--- Testing (with key attributes): {fileName} ---");
+        var structuralAnalyzer = new StructuralAnalyzer();
+        var structureResult = structuralAnalyzer.Analyze(hjsonSourceText);
 
-    string hjsonSourceText = File.ReadAllText(filePath);
+        Assert.Empty(structureResult.StructuralErrors);
 
-    // Phase 1: Structural analysis
-    var structuralAnalyzer = new StructuralAnalyzer();
-    var structureResult = structuralAnalyzer.Analyze(hjsonSourceText);
+        var hjsonContentParser = new HjsonContentParser();
+        var parseResult = hjsonContentParser.Parse(hjsonSourceText, structureResult);
 
-    Console.WriteLine($"  Structural errors: {structureResult.StructuralErrors.Count}");
-
-    // Phase 2: Content parsing WITH key attributes enabled
-    var attributeParserOptions = new HjsonParserOptions { EmitKeyAttributes = true };
-    var hjsonContentParser = new HjsonContentParser(attributeParserOptions);
-    var parseResult = hjsonContentParser.Parse(hjsonSourceText, structureResult);
-
-    Console.WriteLine($"  Semantic errors: {parseResult.SemanticErrors.Count}");
-    Console.WriteLine($"  ParsedDocument: {(parseResult.ParsedDocument != null ? "YES" : "NULL")}");
-
-    if (parseResult.ParsedDocument != null) {
-        using var prettyPrintStream = new MemoryStream();
-        using (var prettyPrintWriter = new Utf8JsonWriter(prettyPrintStream, new JsonWriterOptions { Indented = true })) {
-            parseResult.ParsedDocument.WriteTo(prettyPrintWriter);
-        }
-        string prettyJson = System.Text.Encoding.UTF8.GetString(prettyPrintStream.ToArray());
-        Console.WriteLine($"  JSON output ({prettyJson.Length} chars):");
-        Console.WriteLine(prettyJson);
+        Assert.Empty(parseResult.SemanticErrors);
+        Assert.NotNull(parseResult.ParsedDocument);
     }
 
-    foreach (var semanticError in parseResult.SemanticErrors) {
-        Console.WriteLine($"  ERROR: [{semanticError.Kind}] {semanticError.Message} at line {semanticError.Line}");
-    }
+    [Fact]
+    public void TestKeyAttributesHjson()
+    {
+        string filePath = GetTestDataPath("key_attributes.hjson");
+        string hjsonSourceText = File.ReadAllText(filePath);
 
-    Console.WriteLine();
+        var structuralAnalyzer = new StructuralAnalyzer();
+        var structureResult = structuralAnalyzer.Analyze(hjsonSourceText);
+
+        Assert.Empty(structureResult.StructuralErrors);
+
+        // Parse WITH key attributes enabled
+        var attributeParserOptions = new HjsonParserOptions { EmitKeyAttributes = true };
+        var hjsonContentParser = new HjsonContentParser(attributeParserOptions);
+        var parseResult = hjsonContentParser.Parse(hjsonSourceText, structureResult);
+
+        Assert.Empty(parseResult.SemanticErrors);
+        Assert.NotNull(parseResult.ParsedDocument);
+
+        // Verify __keyAttributes node exists
+        var rootElement = parseResult.ParsedDocument.RootElement;
+        Assert.True(rootElement.TryGetProperty("__keyAttributes", out var keyAttributesElement));
+        Assert.Equal(JsonValueKind.Object, keyAttributesElement.ValueKind);
+    }
 }
