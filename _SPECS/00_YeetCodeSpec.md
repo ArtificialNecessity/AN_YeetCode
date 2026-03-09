@@ -214,7 +214,7 @@ enum_decl ::= "enum" name:IDENT "{" enum_body* "}"
 
 ### Defaults
 
-`= value` after the type provides a default. If the grammar doesn't populate the field, the schema fills it automatically. The template never sees missing required fields.
+The `[default:value]` key attribute provides a default value. If the grammar doesn't populate the field, the schema fills it automatically. The template never sees missing required fields.
 
 ```hjson
 {
