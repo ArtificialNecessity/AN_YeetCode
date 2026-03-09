@@ -119,7 +119,7 @@ public static class UnmatchedCloseHypothesisGenerator
             DelimiterType.Paren => "(",
             DelimiterType.DoubleQuote => "\"",
             DelimiterType.SingleQuote => "'",
-            DelimiterType.TripleQuote => "'''",
+            DelimiterType.TripleDoubleQuote => "\"\"\"",
             _ => "?"
         };
     }
@@ -133,7 +133,7 @@ public static class UnmatchedCloseHypothesisGenerator
             DelimiterType.Paren => ")",
             DelimiterType.DoubleQuote => "\"",
             DelimiterType.SingleQuote => "'",
-            DelimiterType.TripleQuote => "'''",
+            DelimiterType.TripleDoubleQuote => "\"\"\"",
             _ => "?"
         };
     }

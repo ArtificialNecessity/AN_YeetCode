@@ -1,16 +1,18 @@
 namespace HJSONParserForAI.Core;
 
+using System.Text.Json;
+
 /// <summary>
 /// Types of delimiters tracked during structural analysis
 /// </summary>
 public enum DelimiterType
 {
-    Brace,           // { }
-    Bracket,         // [ ]
-    Paren,           // ( ) - rare in HJSON but valid in values
-    DoubleQuote,     // ""
-    SingleQuote,     // ''
-    TripleQuote      // ''' for multiline strings
+    Brace,              // { }
+    Bracket,            // [ ]
+    Paren,              // ( ) - rare in HJSON but valid in values
+    DoubleQuote,        // ""
+    SingleQuote,        // ''
+    TripleDoubleQuote   // """ for multiline strings (standard HJSON)
 }
 
 /// <summary>
@@ -117,10 +119,10 @@ public record SemanticError(
 );
 
 /// <summary>
-/// Complete parse results
+/// Complete parse results — ParsedDocument is null when structural errors prevent parsing
 /// </summary>
 public record ParseResult(
-    object? ParsedValue,
+    JsonDocument? ParsedDocument,
     List<SemanticError> SemanticErrors,
     List<StructuralError> StructuralErrors
 );

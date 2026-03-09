@@ -1,7 +1,7 @@
 {
   # This is a valid HJSON file used as a control test
   name: Simple Valid HJSON
-  version: 1.0
+  version: 1.1
   
   settings: {
     enabled: true

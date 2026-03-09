@@ -135,8 +135,8 @@ string ParseAndFormatOutput(string sourceText)
     var structuralAnalyzer = new StructuralAnalyzer();
     var structureResult = structuralAnalyzer.Analyze(sourceText);
 
-    var hjsonParser = new HjsonParser();
-    var parseResult = hjsonParser.Parse(sourceText, structureResult);
+    var hjsonContentParser = new HjsonContentParser();
+    var parseResult = hjsonContentParser.Parse(sourceText, structureResult);
 
     var diagnosticFormatter = new DiagnosticFormatter();
     return diagnosticFormatter.FormatForAI(parseResult, sourceText, isTestMode: true);

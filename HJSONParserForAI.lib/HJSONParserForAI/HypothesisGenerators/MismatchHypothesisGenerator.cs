@@ -69,7 +69,7 @@ public static class MismatchHypothesisGenerator
             DelimiterType.Paren => "(",
             DelimiterType.DoubleQuote => "\"",
             DelimiterType.SingleQuote => "'",
-            DelimiterType.TripleQuote => "'''",
+            DelimiterType.TripleDoubleQuote => "\"\"\"",
             _ => "?"
         };
     }
@@ -83,7 +83,7 @@ public static class MismatchHypothesisGenerator
             DelimiterType.Paren => ")",
             DelimiterType.DoubleQuote => "\"",
             DelimiterType.SingleQuote => "'",
-            DelimiterType.TripleQuote => "'''",
+            DelimiterType.TripleDoubleQuote => "\"\"\"",
             _ => "?"
         };
     }

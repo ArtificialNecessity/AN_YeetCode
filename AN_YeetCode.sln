@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HJSONParserForAI.lib", "HJSONParserForAI.lib", "{D9D33BA4-2486-FBB4-4BFE-17F74D6C2FB8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HJSONParserForAI", "HJSONParserForAI.lib\HJSONParserForAI\HJSONParserForAI.csproj", "{A294E229-D51C-2281-EE02-AC10819AD987}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A294E229-D51C-2281-EE02-AC10819AD987} = {D9D33BA4-2486-FBB4-4BFE-17F74D6C2FB8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {90225172-385B-4DDE-9CE3-710E7F2E181D}
+	EndGlobalSection
+EndGlobal

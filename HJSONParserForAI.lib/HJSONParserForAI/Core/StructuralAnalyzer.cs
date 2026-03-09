@@ -51,7 +51,7 @@ public class StructuralAnalyzer
                 }
 
                 // Unclosed string at EOL (for non-multiline)
-                if (currentChar == '\n' && delimiterStack.Peek().Type != DelimiterType.TripleQuote)
+                if (currentChar == '\n' && delimiterStack.Peek().Type != DelimiterType.TripleDoubleQuote)
                 {
                     var unclosedStringOpener = delimiterStack.Pop();
                     structuralErrors.Add(CreateUnclosedStringError(unclosedStringOpener, lineNumber, columnNumber));
@@ -154,7 +154,7 @@ public class StructuralAnalyzer
     {
         return delimiterType == DelimiterType.DoubleQuote ||
                delimiterType == DelimiterType.SingleQuote ||
-               delimiterType == DelimiterType.TripleQuote;
+               delimiterType == DelimiterType.TripleDoubleQuote;
     }
 
     private bool TryGetOpenerDelimiter(string sourceText, int position, out DelimiterType delimiterType, out int length)
@@ -162,10 +162,10 @@ public class StructuralAnalyzer
         delimiterType = default;
         length = 1;
 
-        // Check for triple-quote first (multiline string)
-        if (position + 2 < sourceText.Length && sourceText.Substring(position, 3) == "'''")
+        // Check for triple-double-quote first (multiline string — standard HJSON uses """)
+        if (position + 2 < sourceText.Length && sourceText.Substring(position, 3) == "\"\"\"")
         {
-            delimiterType = DelimiterType.TripleQuote;
+            delimiterType = DelimiterType.TripleDoubleQuote;
             length = 3;
             return true;
         }
@@ -197,9 +197,9 @@ public class StructuralAnalyzer
     {
         skipCount = 1;
 
-        if (stringOpener.Type == DelimiterType.TripleQuote)
+        if (stringOpener.Type == DelimiterType.TripleDoubleQuote)
         {
-            if (position + 2 < sourceText.Length && sourceText.Substring(position, 3) == "'''")
+            if (position + 2 < sourceText.Length && sourceText.Substring(position, 3) == "\"\"\"")
             {
                 skipCount = 3;
                 return true;
@@ -295,7 +295,7 @@ public class StructuralAnalyzer
             DelimiterType.Paren => "(",
             DelimiterType.DoubleQuote => "\"",
             DelimiterType.SingleQuote => "'",
-            DelimiterType.TripleQuote => "'''",
+            DelimiterType.TripleDoubleQuote => "\"\"\"",
             _ => "?"
         };
     }
@@ -309,7 +309,7 @@ public class StructuralAnalyzer
             DelimiterType.Paren => ")",
             DelimiterType.DoubleQuote => "\"",
             DelimiterType.SingleQuote => "'",
-            DelimiterType.TripleQuote => "'''",
+            DelimiterType.TripleDoubleQuote => "\"\"\"",
             _ => "?"
         };
     }
