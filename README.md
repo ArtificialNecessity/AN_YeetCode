@@ -1,6 +1,6 @@
-# YeetCode
+# YeetCode & YeetJson
 
-**Yeets one language into another.**
+**Yeet one language into another.** - HJSon and J**son Parsing with errors your AI will love as much as you will.**
 
 YeetCode is a schema-driven meta-programming tool for language-to-language transformation. It parses custom syntax into validated HJSON, then generates multi-file output through templates.
 
@@ -22,7 +22,7 @@ grammar.yeet ──→ data.hjson ──→ template.yt ──→ output files
 
 ## Quick Example
 
-**Input:** Protocol Buffer definition  
+**Input:** Protocol Buffer definition
 **Output:** C# classes with serialization
 
 ```proto
@@ -41,7 +41,7 @@ public class Widget
     public string Name { get; set; } = "";
     public int Quantity { get; set; }
     public List<string> Tags { get; set; } = new();
-    
+  
     public void Encode(IWriter writer) { /* ... */ }
     public static Widget Decode(IReader reader) { /* ... */ }
 }
@@ -69,7 +69,7 @@ See [**Intro to YeetCode**](_SPECS/IntroToYeetCode.md) for a complete walkthroug
 
 ## Project Structure
 
-- **YeetJson.lib/** — Two-phase HJSON parser with AI-friendly diagnostics (formerly HJSONParserForAI)
+- **[YeetJson.lib/](YeetJson.lib/)** — Two-phase JSON/HJSON/YTSON parser with AI-friendly error diagnostics. Supports JSON, JSONC, HJSON, and YTSON (HJSON + key attributes). Provides exceptionally clear, actionable error messages with ranked repair suggestions. See [YeetJson README](YeetJson.lib/README.md) for details.
 - **YeetCode.lib/** — Core YeetCode implementation
   - `Schema/` — Schema loading and validation
   - `Template/` — Template engine with custom delimiters
@@ -80,6 +80,7 @@ See [**Intro to YeetCode**](_SPECS/IntroToYeetCode.md) for a complete walkthroug
 ## Current Status
 
 **Phase 1-3 Complete:**
+
 - ✅ HJSON Parser with key attributes extension
 - ✅ Schema system with type validation and defaults
 - ✅ Template engine with multi-file output
@@ -87,18 +88,19 @@ See [**Intro to YeetCode**](_SPECS/IntroToYeetCode.md) for a complete walkthroug
 - ✅ All tests passing (37/37)
 
 **Remaining Work:**
+
 - Grammar preprocessor (`%define`, `%if`/`%else`/`%endif`)
 - CLI implementation
 - End-to-end integration tests
 
 ## File Extensions
 
-| Extension | Purpose |
-|-----------|---------|
-| `.hjson` | Standard HJSON data files |
+| Extension  | Purpose                               |
+| ---------- | ------------------------------------- |
+| `.hjson` | Standard HJSON data files             |
 | `.ytson` | HJSON + key attributes (schema files) |
-| `.yt` | YeetCode templates |
-| `.yeet` | PEG grammar definitions |
+| `.yt`    | YeetCode templates                    |
+| `.yeet`  | PEG grammar definitions               |
 
 ## License
 
