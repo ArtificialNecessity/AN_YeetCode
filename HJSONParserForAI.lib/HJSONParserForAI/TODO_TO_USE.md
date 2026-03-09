@@ -1,6 +1,6 @@
 # TODO: Make Our HJSON Parser Production-Ready
 
-**Goal:** Replace the third-party `Hjson` library in [`CrucibleLoader.cs`](../../apiserver/Crucible/Loader/CrucibleLoader.cs) with our custom two-phase parser.
+**Goal:** Use our custom two-phase parser for production HJSON parsing needs.
 
 **Status:** Phase 1 (structural analysis) is ✅ COMPLETE. Phase 2 (content parsing) is ❌ STUB ONLY.
 
@@ -141,18 +141,9 @@ public ParseResult Parse(...) {
 
 ---
 
-### 5. **Integration Changes**
+### 5. **Integration Example**
 
-**File:** [`apiserver/Crucible/Loader/CrucibleLoader.cs:58-60`](../../apiserver/Crucible/Loader/CrucibleLoader.cs:58-60)
-
-**BEFORE (using third-party Hjson):**
-```csharp
-var hjsonContent = File.ReadAllText(hjsonFilePath);
-var jsonValue = HjsonValue.Parse(hjsonContent);  // Third-party
-jsonString = jsonValue.ToString(Stringify.Plain);
-```
-
-**AFTER (using our parser):**
+**Usage pattern:**
 ```csharp
 var hjsonContent = File.ReadAllText(hjsonFilePath);
 
@@ -168,7 +159,7 @@ if (structure.StructuralErrors.Count > 0) {
         hjsonContent
     );
     throw new InvalidOperationException(
-        $"Crucible '{crucibleName}' has structural errors:\n{diagnostics}"
+        $"File has structural errors:\n{diagnostics}"
     );
 }
 
@@ -176,7 +167,7 @@ if (structure.StructuralErrors.Count > 0) {
 var hjsonParser = new HjsonParser();
 var parseResult = hjsonParser.Parse(hjsonContent, structure);
 
-// Convert JsonDocument to JSON string for JsonSerializer.Deserialize<CrucibleDefinition>
+// Convert JsonDocument to JSON string for deserialization
 jsonString = JsonSerializer.Serialize(parseResult.ParsedValue);
 ```
 
@@ -186,8 +177,8 @@ jsonString = JsonSerializer.Serialize(parseResult.ParsedValue);
 **Goal:** Ensure parsing is fast enough for production
 
 **Benchmarks needed:**
-- Small crucible (<100 lines) - should be <1ms
-- Large crucible (1000+ lines) - should be <10ms
+- Small file (<100 lines) - should be <1ms
+- Large file (1000+ lines) - should be <10ms
 - Broken file with errors - should be <50ms (includes hypothesis generation)
 
 ---
@@ -228,13 +219,11 @@ jsonString = JsonSerializer.Serialize(parseResult.ParsedValue);
 
 ### When to Do This
 
-**Not urgent** - Third-party Hjson library works fine for now.
-
 **Trigger to implement:**
-1. Users frequently write broken crucibles and need help debugging
+1. Users frequently write broken HJSON and need help debugging
 2. We want to add HJSON extensions (custom syntax)
 3. We need comment-preserving round-trip editing
-4. Error messages from third-party lib become a pain point
+4. Need better error messages for HJSON parsing
 
 ---
 
@@ -243,8 +232,7 @@ jsonString = JsonSerializer.Serialize(parseResult.ParsedValue);
 When ready to implement:
 1. Switch to Code mode
 2. Start with Phase 2 parser implementation
-3. Test against existing crucibles
-4. Gradually migrate CrucibleLoader
-5. Remove third-party Hjson dependency
+3. Test against existing HJSON files
+4. Integrate into applications as needed
 
 **No rush** - the architecture is ready, implementation is straightforward when needed.

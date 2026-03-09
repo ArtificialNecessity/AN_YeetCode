@@ -36,24 +36,6 @@ public class SmokeTest
     }
 
     [Fact]
-    public void TestDevnullCrucibleHjson()
-    {
-        string filePath = GetTestDataPath("devnull.crucible.hjson");
-        string hjsonSourceText = File.ReadAllText(filePath);
-
-        var structuralAnalyzer = new StructuralAnalyzer();
-        var structureResult = structuralAnalyzer.Analyze(hjsonSourceText);
-
-        Assert.Empty(structureResult.StructuralErrors);
-
-        var hjsonContentParser = new HjsonContentParser();
-        var parseResult = hjsonContentParser.Parse(hjsonSourceText, structureResult);
-
-        Assert.Empty(parseResult.SemanticErrors);
-        Assert.NotNull(parseResult.ParsedDocument);
-    }
-
-    [Fact]
     public void TestKeyAttributesHjson()
     {
         string filePath = GetTestDataPath("key_attributes.hjson");

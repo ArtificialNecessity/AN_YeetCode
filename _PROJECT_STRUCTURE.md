@@ -8,7 +8,7 @@ multi-file output through templates with configurable delimiters.
 
 **Implementation Language:** C# / .NET 10
 **Current Scope:** Phases 1-3 (HJSON Parser, Schema, Template, Grammar, CLI — no Parser Generator)
-**Test Target:** Crucible coordination language → C#
+**Test Target:** Protocol Buffers → C#
 
 ## Pipeline
 
@@ -29,7 +29,6 @@ AN_YeetCode/
 ├── _SPECS/                            # Specification documents
 │   ├── 00_YeetCodeSpec.md             # Core spec: schema, grammar, template, CLI
 │   ├── 05_YeetCode_ParserGenerator.md # Parser generator spec (future)
-│   ├── 10_Crucible_V3_Yeetcode.md     # Crucible example: schema + grammar + template
 │   ├── 20_ProtoBuff_YeetCode.md       # Protobuf example: schema + grammar + template
 │   └── Two_Phase_Parsing_For_AI_Friendly_Diagnostics.md
 │
@@ -77,11 +76,11 @@ AN_YeetCode/
 │   └── YeetCode.CLI.csproj
 │
 ├── examples/                          # Example pipelines
-│   └── crucible/                      # Crucible test case
-│       ├── crucible.schema.hjson
-│       ├── crucible.grammar.yeet
-│       ├── crucible-csharp.yt
-│       ├── test_simple.crucible       # Simple test input
+│   └── protobuf/                      # Protocol Buffers test case
+│       ├── proto.schema.ytson
+│       ├── proto.grammar.yeet
+│       ├── proto-csharp.yt
+│       ├── test_simple.proto          # Simple test input
 │       └── expected/                  # Expected output for verification
 │
 └── YeetCode.sln                       # Solution file
@@ -126,7 +125,7 @@ var result = hjsonParser.Parse(hjsonContent, structure);
 var jsonDoc = result.ParsedDocument;
 
 // Deserialize into strong C# types
-var crucible = jsonDoc.Deserialize<CrucibleDefinition>();
+var protoDefinition = jsonDoc.Deserialize<ProtoDefinition>();
 ```
 
 HJSON features to support:
@@ -219,7 +218,7 @@ Command-line interface:
 
 ### Phase E: CLI and Integration
 1. Implement CLI with all commands
-2. Create Crucible test artifacts (schema, grammar, template, input)
+2. Create Protocol Buffer test artifacts (schema, grammar, template, input)
 3. End-to-end testing
 
 ## Test Strategy
@@ -227,8 +226,8 @@ Command-line interface:
 - **HJSON Parser**: Gold file tests (existing pattern) + unit tests for Phase 2
 - **Schema**: Unit tests for type registry building and data validation
 - **Template**: Unit tests for lexer/parser/evaluator + integration tests with example templates
-- **Grammar**: Unit tests for PEG expressions + integration tests with Crucible grammar
-- **E2E**: Crucible .crucible → .g.cs with expected output comparison
+- **Grammar**: Unit tests for PEG expressions + integration tests with Protocol Buffer grammar
+- **E2E**: Protocol Buffer .proto → .g.cs with expected output comparison
 
 ## Key Design Decisions
 

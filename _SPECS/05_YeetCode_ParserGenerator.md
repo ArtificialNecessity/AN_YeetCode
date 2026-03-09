@@ -18,7 +18,7 @@ Yeetcode grammars serve double duty:
 | **Who parses** | Yeetcode's built-in PEG interpreter | Generated parser (standalone code) |
 | **Output** | HJSON → templates → generated code | A parser source file that produces HJSON |
 | **Dependencies** | Yeetcode toolchain | None — parser is self-contained |
-| **Use case** | Compile `.crucible` → `Crucible.g.cs` | Load `.crucible` at runtime, execute dynamically |
+| **Use case** | Compile `.proto` → `Proto.g.cs` | Load `.proto` at runtime, parse dynamically |
 
 Same grammar. Same schema. Same HJSON shape. Different execution context.
 
@@ -783,15 +783,15 @@ public sealed class MyLanguageValidator
 
 ## 6. Full Runtime Pipeline
 
-Putting parser + validator together for Crucible interpreter mode:
+Putting parser + validator together for runtime parsing:
 
 ```csharp
-// Load and parse a .crucible file at runtime
-var parser = new CrucibleParser();
-var raw = parser.Parse(File.ReadAllText("devnull.crucible"));
+// Load and parse a .proto file at runtime
+var parser = new ProtoParser();
+var raw = parser.Parse(File.ReadAllText("example.proto"));
 
 // Validate against schema, fill defaults
-var validator = new CrucibleValidator();
+var validator = new ProtoValidator();
 var result = validator.Validate(raw);
 
 if (result.Errors.Count > 0)
@@ -801,12 +801,12 @@ if (result.Errors.Count > 0)
     return;
 }
 
-// Execute the validated crucible data
-var engine = new CrucibleEngine();
-var output = await engine.Execute(result.Data);
+// Use the validated proto data
+var generator = new CodeGenerator();
+var output = generator.Generate(result.Data);
 ```
 
-Both `CrucibleParser.g.cs` and `CrucibleValidator.g.cs` are generated
+Both `ProtoParser.g.cs` and `ProtoValidator.g.cs` are generated
 by Yeetcode at build time. At runtime they're just normal C# classes
 with no dependencies on the Yeetcode toolchain.
 

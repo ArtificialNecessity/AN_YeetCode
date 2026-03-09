@@ -65,7 +65,6 @@ See [**Intro to YeetCode**](_SPECS/IntroToYeetCode.md) for a complete walkthroug
 - [**IntroToYeetCode.md**](_SPECS/IntroToYeetCode.md) — Quick start guide with complete example
 - [**00_YeetCodeSpec.md**](_SPECS/00_YeetCodeSpec.md) — Full specification
 - [**20_ProtoBuff_YeetCode.md**](_SPECS/20_ProtoBuff_YeetCode.md) — Protobuf → C# example
-- [**10_Crucible_V3_Yeetcode.md**](_SPECS/10_Crucible_V3_Yeetcode.md) — Crucible coordination language example
 - [**05_YeetCode_ParserGenerator.md**](_SPECS/05_YeetCode_ParserGenerator.md) — Runtime parser generation
 
 ## Project Structure
