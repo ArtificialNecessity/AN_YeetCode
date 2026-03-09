@@ -18,7 +18,62 @@ grammar.yeet ──→ data.hjson ──→ template.yt ──→ output files
 
 ## Quick Example
 
-### Schema (`proto.schema.ytson`)
+### INPUT (`widgets.proto`)
+
+```proto
+syntax = "proto3";
+package acme.widgets;
+
+message Widget {
+  required string name = 1;
+  int32 quantity = 2;
+  repeated string tags = 3;
+}
+```
+
+### OUTPUT (`Widget.cs`)
+
+```csharp
+using System.Collections.Generic;
+
+namespace Acme.Widgets;
+
+public class Widget
+{
+    public string Name { get; set; } = "";
+    public int Quantity { get; set; }
+    public List<string> Tags { get; set; } = new();
+
+    public void Encode(IWriter writer)
+    {
+        writer.WriteString(1, Name);
+        writer.WriteInt32(2, Quantity);
+        foreach (var tag in Tags) {
+            writer.WriteString(3, tag);
+        }
+    }
+
+    public static Widget Decode(IReader reader)
+    {
+        var widget = new Widget();
+        while (reader.ReadTag(out int tag)) {
+            switch (tag) {
+                case 1: widget.Name = reader.ReadString(); break;
+                case 2: widget.Quantity = reader.ReadInt32(); break;
+                case 3: widget.Tags.Add(reader.ReadString()); break;
+                default: reader.SkipField(); break;
+            }
+        }
+        return widget;
+    }
+}
+```
+
+## How YeetCode Gets There
+
+### 1. Schema (`proto.schema.ytson`)
+
+Defines the shape of the intermediate data:
 
 ```hjson
 {
@@ -36,9 +91,11 @@ grammar.yeet ──→ data.hjson ──→ template.yt ──→ output files
 }
 ```
 
-`@Field` defines a reusable type. `[optional]` marks fields that may be absent. `= proto3` provides a default. `{ @: ... }` defines a map (named collection).
+`@Field` defines a reusable type. `[optional]` marks fields that may be absent. `[default:value]` provides a default. `{ @: ... }` defines a map (named collection).
 
-### Data (`widgets.hjson`)
+### 2. Data (`widgets.hjson`)
+
+The input is parsed by a grammar (not shown) into this validated HJSON:
 
 ```hjson
 {
@@ -55,36 +112,65 @@ grammar.yeet ──→ data.hjson ──→ template.yt ──→ output files
 }
 ```
 
-This is validated against the schema. Missing defaults are filled in (`label: optional` for `quantity`). Type mismatches are caught. Required fields are enforced.
+Validated against the schema. Missing defaults filled in (`label: optional` for `quantity`).
 
-### Template (`csharp.yt`)
+### 3. Template (`csharp.yt`)
+
+Reads the data and generates output:
 
 ```
 <?yt delim="<% %>" ?>
 <% each messages as msg_name, msg %>
-public class <% pascal msg_name %> {
+using System.Collections.Generic;
+
+namespace <% pascal_dotted package %>;
+
+public class <% pascal msg_name %>
+{
     <% each msg.fields as fname, f %>
     <% if f.label == "repeated" %>
     public List<<% csharp_type[f.type] %>> <% pascal fname %> { get; set; } = new();
     <% else %>
-    public <% csharp_type[f.type] %> <% pascal fname %> { get; set; }
+    public <% csharp_type[f.type] %> <% pascal fname %> { get; set; }<% if f.label == "required" %> = ""<% /if %>;
     <% /if %>
     <% /each %>
+
+    public void Encode(IWriter writer)
+    {
+        <% each msg.fields as fname, f %>
+        <% if f.label == "repeated" %>
+        foreach (var item in <% pascal fname %>) {
+            writer.Write<% pascal csharp_type[f.type] %>(<% f.tag %>, item);
+        }
+        <% else %>
+        writer.Write<% pascal csharp_type[f.type] %>(<% f.tag %>, <% pascal fname %>);
+        <% /if %>
+        <% /each %>
+    }
+
+    public static <% pascal msg_name %> Decode(IReader reader)
+    {
+        var obj = new <% pascal msg_name %>();
+        while (reader.ReadTag(out int tag)) {
+            switch (tag) {
+                <% each msg.fields as fname, f %>
+                <% if f.label == "repeated" %>
+                case <% f.tag %>: obj.<% pascal fname %>.Add(reader.Read<% pascal csharp_type[f.type] %>()); break;
+                <% else %>
+                case <% f.tag %>: obj.<% pascal fname %> = reader.Read<% pascal csharp_type[f.type] %>(); break;
+                <% /if %>
+                <% /each %>
+                default: reader.SkipField(); break;
+            }
+        }
+        return obj;
+    }
 }
 <% /each %>
 ```
 
-The first line declares delimiters (`<% %>`). Pick any pair that doesn't collide with your output language — `{% %}`, `[[ ]]`, whatever. Zero escaping needed.
+The first line declares delimiters (`<% %>`). Pick any pair that doesn't collide with your output language. Zero escaping needed.
 
-### Output (`Widget.cs`)
-
-```csharp
-public class Widget {
-    public string Name { get; set; }
-    public int Quantity { get; set; }
-    public List<string> Tags { get; set; } = new();
-}
-```
 
 ## Key Concepts
 
