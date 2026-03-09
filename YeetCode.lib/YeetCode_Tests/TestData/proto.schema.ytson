@@ -1,0 +1,19 @@
+{
+  @Field: {
+    type: string
+    tag: int
+    label: string = optional
+    deprecated: bool = false
+  }
+
+  package [optional]: string
+  syntax: string = proto3
+  messages [optional]: {
+    @: {
+      fields: {
+        @: @Field
+      }
+    }
+  }
+  enums [optional]: {}
+}

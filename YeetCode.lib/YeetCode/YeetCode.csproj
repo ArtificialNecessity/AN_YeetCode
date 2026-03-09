@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>YeetCode</RootNamespace>
+    <AssemblyName>YeetCode</AssemblyName>
+    <Version>0.1.0</Version>
+    <Description>YeetCode - Schema-driven meta-programming tool for language-to-language transformation</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\HJSONParserForAI.lib\HJSONParserForAI\HJSONParserForAI.csproj" />
+  </ItemGroup>
+
+</Project>

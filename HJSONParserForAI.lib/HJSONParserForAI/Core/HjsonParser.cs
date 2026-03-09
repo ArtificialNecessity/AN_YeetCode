@@ -5,6 +5,26 @@ using System.Text;
 using System.Text.Json;
 
 /// <summary>
+/// Configuration options for the HJSON content parser.
+/// </summary>
+public class HjsonParserOptions
+{
+    /// <summary>
+    /// When true, key attributes like key [optional, lang:en]: value
+    /// are emitted into the JSON tree as a sibling "__keyAttributes" node
+    /// within each object that has attributed keys.
+    /// When false (default), attributes are parsed and silently discarded.
+    /// </summary>
+    public bool EmitKeyAttributes { get; init; } = false;
+
+    /// <summary>
+    /// The JSON property name used for the key attributes node.
+    /// Default: "__keyAttributes"
+    /// </summary>
+    public string KeyAttributesNodeName { get; init; } = "__keyAttributes";
+}
+
+/// <summary>
 /// Phase 2: Recursive descent HJSON parser that produces JsonDocument output.
 /// Uses Utf8JsonWriter internally to build valid JSON from HJSON input,
 /// then wraps it in JsonDocument.Parse().
@@ -17,14 +37,23 @@ using System.Text.Json;
 /// - Trailing commas
 /// - Optional root braces
 /// - Standard JSON values: strings, numbers, booleans, null, objects, arrays
+/// - Key attributes: key [attr, attr:value]: value (HJSON extension)
 /// </summary>
 public class HjsonContentParser
 {
+    private readonly HjsonParserOptions _parserOptions;
     private string _sourceText = "";
     private int _position;
     private int _lineNumber;
     private int _columnNumber;
     private List<SemanticError> _semanticErrors = new();
+
+    public HjsonContentParser() : this(new HjsonParserOptions()) { }
+
+    public HjsonContentParser(HjsonParserOptions parserOptions)
+    {
+        _parserOptions = parserOptions;
+    }
 
     public ParseResult Parse(string sourceText, StructureResult structureAnalysisResult)
     {
@@ -149,6 +178,9 @@ public class HjsonContentParser
 
     private void WriteObjectMembers(Utf8JsonWriter jsonWriter)
     {
+        // Collect key attributes for this object scope
+        Dictionary<string, Dictionary<string, string>>? collectedKeyAttributes = null;
+
         while (_position < _sourceText.Length)
         {
             SkipWhitespaceAndComments();
@@ -159,6 +191,15 @@ public class HjsonContentParser
             // Parse key
             string memberKey = ReadKey();
             if (string.IsNullOrEmpty(memberKey)) break;
+
+            SkipWhitespaceAndComments();
+
+            // Check for key attributes: key [attr1, attr2:value]
+            var keyAttributes = TryReadKeyAttributes();
+            if (keyAttributes != null) {
+                collectedKeyAttributes ??= new Dictionary<string, Dictionary<string, string>>();
+                collectedKeyAttributes[memberKey] = keyAttributes;
+            }
 
             SkipWhitespaceAndComments();
 
@@ -185,6 +226,29 @@ public class HjsonContentParser
             {
                 Advance(); // skip ','
             }
+        }
+
+        // Emit __keyAttributes node if any keys had attributes and emission is enabled
+        if (collectedKeyAttributes != null && _parserOptions.EmitKeyAttributes) {
+            jsonWriter.WritePropertyName(_parserOptions.KeyAttributesNodeName);
+            jsonWriter.WriteStartObject();
+            foreach (var (attributedKeyName, attributeMap) in collectedKeyAttributes) {
+                jsonWriter.WritePropertyName(attributedKeyName);
+                jsonWriter.WriteStartObject();
+                foreach (var (attrName, attrValue) in attributeMap) {
+                    jsonWriter.WritePropertyName(attrName);
+                    // Write "true" as boolean true, everything else as string
+                    if (attrValue == "true") {
+                        jsonWriter.WriteBooleanValue(true);
+                    } else if (attrValue == "false") {
+                        jsonWriter.WriteBooleanValue(false);
+                    } else {
+                        jsonWriter.WriteStringValue(attrValue);
+                    }
+                }
+                jsonWriter.WriteEndObject();
+            }
+            jsonWriter.WriteEndObject();
         }
     }
 
@@ -311,6 +375,87 @@ public class HjsonContentParser
         }
 
         return _sourceText[keyStartPosition.._position].Trim();
+    }
+
+    /// <summary>
+    /// Parse key attributes: [attr1, attr2:value, attr3]
+    /// Called when position is at '[' after a key name.
+    /// Bare attributes like [optional] get value "true".
+    /// Key:value attributes like [lang:en] get the specified value.
+    /// Returns null if position is not at '['.
+    /// </summary>
+    private Dictionary<string, string>? TryReadKeyAttributes()
+    {
+        if (_position >= _sourceText.Length || _sourceText[_position] != '[') {
+            return null;
+        }
+
+        Advance(); // skip '['
+        var parsedAttributes = new Dictionary<string, string>();
+
+        while (_position < _sourceText.Length && _sourceText[_position] != ']')
+        {
+            SkipWhitespaceAndComments();
+            if (_position >= _sourceText.Length || _sourceText[_position] == ']') break;
+
+            // Read attribute name
+            int attrNameStart = _position;
+            while (_position < _sourceText.Length)
+            {
+                char attrChar = _sourceText[_position];
+                if (attrChar == ':' || attrChar == ',' || attrChar == ']' ||
+                    attrChar == '\n' || attrChar == '\r') {
+                    break;
+                }
+                Advance();
+            }
+            string attributeName = _sourceText[attrNameStart.._position].Trim();
+
+            if (string.IsNullOrEmpty(attributeName)) break;
+
+            // Check for :value
+            if (_position < _sourceText.Length && _sourceText[_position] == ':')
+            {
+                Advance(); // skip ':'
+                int attrValueStart = _position;
+                while (_position < _sourceText.Length)
+                {
+                    char valChar = _sourceText[_position];
+                    if (valChar == ',' || valChar == ']' ||
+                        valChar == '\n' || valChar == '\r') {
+                        break;
+                    }
+                    Advance();
+                }
+                string attributeValue = _sourceText[attrValueStart.._position].Trim();
+                parsedAttributes[attributeName] = attributeValue;
+            }
+            else
+            {
+                // Bare flag — value is "true"
+                parsedAttributes[attributeName] = "true";
+            }
+
+            SkipWhitespaceAndComments();
+
+            // Optional comma between attributes
+            if (_position < _sourceText.Length && _sourceText[_position] == ',')
+            {
+                Advance(); // skip ','
+            }
+        }
+
+        if (_position < _sourceText.Length && _sourceText[_position] == ']')
+        {
+            Advance(); // skip ']'
+        }
+        else
+        {
+            AddSemanticError("UnclosedKeyAttributes",
+                "Key attribute list '[' was never closed with ']'");
+        }
+
+        return parsedAttributes.Count > 0 ? parsedAttributes : null;
     }
 
     // ── String reading ──────────────────────────────────────

@@ -1,3 +1,4 @@
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
@@ -6,22 +7,51 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "HJSONParserForAI.lib", "HJS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HJSONParserForAI", "HJSONParserForAI.lib\HJSONParserForAI\HJSONParserForAI.csproj", "{A294E229-D51C-2281-EE02-AC10819AD987}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "YeetCode.lib", "YeetCode.lib", "{B1DF22C3-E97B-50AC-AF5C-9B585D36F5A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YeetCode", "YeetCode.lib\YeetCode\YeetCode.csproj", "{C8419009-3498-4A6A-AB5C-086DB10F7340}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
 		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A294E229-D51C-2281-EE02-AC10819AD987}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A294E229-D51C-2281-EE02-AC10819AD987}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Debug|x64.Build.0 = Debug|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Debug|x86.Build.0 = Debug|Any CPU
 		{A294E229-D51C-2281-EE02-AC10819AD987}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A294E229-D51C-2281-EE02-AC10819AD987}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Release|x64.ActiveCfg = Release|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Release|x64.Build.0 = Release|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Release|x86.ActiveCfg = Release|Any CPU
+		{A294E229-D51C-2281-EE02-AC10819AD987}.Release|x86.Build.0 = Release|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Debug|x64.Build.0 = Debug|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Debug|x86.Build.0 = Debug|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Release|x64.ActiveCfg = Release|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Release|x64.Build.0 = Release|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Release|x86.ActiveCfg = Release|Any CPU
+		{C8419009-3498-4A6A-AB5C-086DB10F7340}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A294E229-D51C-2281-EE02-AC10819AD987} = {D9D33BA4-2486-FBB4-4BFE-17F74D6C2FB8}
+		{C8419009-3498-4A6A-AB5C-086DB10F7340} = {B1DF22C3-E97B-50AC-AF5C-9B585D36F5A0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {90225172-385B-4DDE-9CE3-710E7F2E181D}

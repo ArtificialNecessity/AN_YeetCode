@@ -1,0 +1,19 @@
+{
+  @Field: {
+    type: string
+    tag: int
+    label [optional]: string
+    deprecated [optional]: bool
+  }
+
+  package [optional]: string
+  syntax: string
+  messages [optional, kind:map]: {
+    @: {
+      fields: {
+        @: @Field
+      }
+    }
+  }
+  enums [optional]: {}
+}

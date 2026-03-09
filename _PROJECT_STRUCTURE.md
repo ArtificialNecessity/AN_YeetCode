@@ -243,6 +243,12 @@ Command-line interface:
 
 ## Future Work (not in current scope)
 
+- **Rename parser to YeetJson** — the HJSON parser library (`HJSONParserForAI`) will eventually be renamed to `YeetJson` to reflect its extended capabilities beyond standard HJSON (key attributes, strictness levels, etc.)
+- **Parser strictness levels** — the parser should support configurable strictness modes:
+  - **Strict JSON** — standard JSON only, no extensions
+  - **JSONC** — JSON with comments (`//`, `/* */`)
+  - **HJSON** — full HJSON: unquoted keys/values, trailing commas, multiline strings, comments
+  - **YTSON** — HJSON + key attributes (`key [attr, attr:value]: value`), file extension `.ytson`
 - **Comment preservation** — HJSON comments optionally parsed into preserved elements (e.g., special keys like `//comment_0`, `#comment_1`) that can be iterated like normal keys or ignored via a parse-time setting. This enables comment-aware tooling and round-trip editing.
 - **JSON → HJSON output** — serialize JsonDocument/JsonElement back to human-friendly HJSON format with proper indentation and optional comment reinsertion
 - **Format-preserving HJSON edit interface** — programmatically edit HJSON files while preserving original string formatting, indentation, comments, and whitespace. Round-trip editing without butchering the source. Depends on comment preservation.
