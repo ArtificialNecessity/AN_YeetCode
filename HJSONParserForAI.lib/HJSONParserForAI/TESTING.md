@@ -50,7 +50,6 @@ Tests/TestData/
 - `broken_mismatch.hjson` - Mismatched delimiters
 - `broken_multiple.hjson` - Multiple structural errors  
 - `broken_unclosed.hjson` - Unclosed delimiters
-- `devnull.crucible.hjson` - Real crucible spec
 - `valid_simple.hjson` - Valid HJSON control test
 
 ## How It Works

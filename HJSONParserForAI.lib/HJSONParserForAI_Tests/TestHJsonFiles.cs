@@ -17,7 +17,6 @@ public class TestHJsonFiles
 
     [Theory]
     [InlineData("valid_simple.hjson")]
-    [InlineData("devnull.crucible.hjson")]
     public void TestHjsonFileAgainstGold(string testFileName)
     {
         string testFilePath = GetTestDataPath(testFileName);

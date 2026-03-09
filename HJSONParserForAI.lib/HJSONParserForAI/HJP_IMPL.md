@@ -45,8 +45,7 @@ HJSONParserForAI/
 │   │   ├── valid_simple.hjson
 │   │   ├── broken_unclosed.hjson
 │   │   ├── broken_mismatch.hjson
-│   │   ├── broken_multiple.hjson
-│   │   └── devnull.crucible.hjson  # Copy from specs
+│   │   └── broken_multiple.hjson
 │   ├── Phase1Tests.cs
 │   ├── Phase2Tests.cs
 │   └── IntegrationTests.cs
