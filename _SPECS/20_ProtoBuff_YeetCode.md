@@ -295,7 +295,7 @@ Key grammar changes:
 <%# ═══════════════════════════════════════════ %>
 
 <%#define is_scalar(type)%>
-<%#if csharp_type.<%type%>%>true<%/if%>
+<%#if csharp_type[type]%>true<%/if%>
 <%/define%>
 
 <%# ═══════════════════════════════════════════ %>
@@ -303,7 +303,7 @@ Key grammar changes:
 <%# ═══════════════════════════════════════════ %>
 
 <%#define is_enum(type)%>
-<%#if enums.<%type%>%>true<%/if%>
+<%#if enums[type]%>true<%/if%>
 <%/define%>
 
 <%# ═══════════════════════════════════════════ %>
@@ -313,11 +313,11 @@ Key grammar changes:
 <%# ═══════════════════════════════════════════ %>
 
 <%#define cs_type(type)%>
-<%#if csharp_type.<%type%>%><%csharp_type type%><%#else%><%pascal type%><%/if%>
+<%#if csharp_type[type]%><%csharp_type[type]%><%#else%><%pascal type%><%/if%>
 <%/define%>
 
 <%#define cs_default(type)%>
-<%#if csharp_default.<%type%>%><%csharp_default type%><%#elif enums.<%type%>%>0<%#else%>null<%/if%>
+<%#if csharp_default[type]%><%csharp_default[type]%><%#elif enums[type]%>0<%#else%>null<%/if%>
 <%/define%>
 
 <%# ═══════════════════════════════════════════ %>
@@ -611,7 +611,7 @@ namespace <%pascal_dotted package%>
 <%indent%>private readonly RepeatedField<<%#call cs_type(f.type)%>> _<%camel fname%> = new();
 <%indent%>public RepeatedField<<%#call cs_type(f.type)%>> <%pascal fname%> => _<%camel fname%>;
 
-<%#elif enums.<%f.type%>%>
+<%#elif enums[f.type]%>
 <%# ── Enum field ── %>
 <%indent%>private <%pascal f.type%> _<%camel fname%> = 0;
 <%indent%>public <%pascal f.type%> <%pascal fname%>
@@ -620,10 +620,10 @@ namespace <%pascal_dotted package%>
 <%indent%>    set => _<%camel fname%> = value;
 <%indent%>}
 
-<%#elif csharp_type.<%f.type%>%>
+<%#elif csharp_type[f.type]%>
 <%# ── Scalar field ── %>
-<%indent%>private <%csharp_type f.type%> _<%camel fname%> = <%csharp_default f.type%>;
-<%indent%>public <%csharp_type f.type%> <%pascal fname%>
+<%indent%>private <%csharp_type[f.type]%> _<%camel fname%> = <%csharp_default[f.type]%>;
+<%indent%>public <%csharp_type[f.type]%> <%pascal fname%>
 <%indent%>{
 <%indent%>    get => _<%camel fname%>;
 <%indent%>    set => _<%camel fname%> = value;
@@ -648,17 +648,17 @@ namespace <%pascal_dotted package%>
 <%#define emit_write(fname, f, indent)%>
 <%#if f.label == "repeated"%>
 <%indent%>_<%camel fname%>.WriteTo(output, _repeated_<%camel fname%>_codec);
-<%#elif enums.<%f.type%>%>
+<%#elif enums[f.type]%>
 <%indent%>if (_<%camel fname%> != 0)
 <%indent%>{
 <%indent%>    output.WriteRawTag(<%f.tag%>);
 <%indent%>    output.WriteEnum((int)_<%camel fname%>);
 <%indent%>}
-<%#elif csharp_type.<%f.type%>%>
-<%indent%>if (_<%camel fname%> != <%csharp_default f.type%>)
+<%#elif csharp_type[f.type]%>
+<%indent%>if (_<%camel fname%> != <%csharp_default[f.type]%>)
 <%indent%>{
 <%indent%>    output.WriteRawTag(<%f.tag%>);
-<%indent%>    output.<%write_method f.type%>(_<%camel fname%>);
+<%indent%>    output.<%write_method[f.type]%>(_<%camel fname%>);
 <%indent%>}
 <%#else%>
 <%indent%>if (_<%camel fname%> != null)
@@ -675,11 +675,11 @@ namespace <%pascal_dotted package%>
 
 <%#define emit_size(fname, f, indent)%>
 <%#if f.label != "repeated"%>
-<%#if enums.<%f.type%>%>
+<%#if enums[f.type]%>
 <%indent%>if (_<%camel fname%> != 0)
 <%indent%>    size += CodedOutputStream.ComputeTagSize(<%f.tag%>) + CodedOutputStream.ComputeEnumSize((int)_<%camel fname%>);
-<%#elif csharp_type.<%f.type%>%>
-<%indent%>if (_<%camel fname%> != <%csharp_default f.type%>)
+<%#elif csharp_type[f.type]%>
+<%indent%>if (_<%camel fname%> != <%csharp_default[f.type]%>)
 <%indent%>    size += CodedOutputStream.ComputeTagSize(<%f.tag%>) + CodedOutputStream.Compute<%pascal f.type%>Size(_<%camel fname%>);
 <%#else%>
 <%indent%>if (_<%camel fname%> != null)
@@ -694,13 +694,13 @@ namespace <%pascal_dotted package%>
 
 <%#define emit_read_case(fname, f, indent)%>
 <%#if f.label != "repeated"%>
-<%#if enums.<%f.type%>%>
+<%#if enums[f.type]%>
 <%indent%>case <%f.tag%>u:
 <%indent%>    _<%camel fname%> = (<%pascal f.type%>)input.ReadEnum();
 <%indent%>    break;
-<%#elif csharp_type.<%f.type%>%>
+<%#elif csharp_type[f.type]%>
 <%indent%>case <%f.tag%>u:
-<%indent%>    _<%camel fname%> = input.<%read_method f.type%>();
+<%indent%>    _<%camel fname%> = input.<%read_method[f.type]%>();
 <%indent%>    break;
 <%#else%>
 <%indent%>case <%f.tag%>u:
@@ -718,9 +718,9 @@ namespace <%pascal_dotted package%>
 <%#define emit_copy(fname, f, indent)%>
 <%#if f.label == "repeated"%>
 <%indent%>_<%camel fname%>.Add(other._<%camel fname%>);
-<%#elif csharp_type.<%f.type%>%>
+<%#elif csharp_type[f.type]%>
 <%indent%>_<%camel fname%> = other._<%camel fname%>;
-<%#elif enums.<%f.type%>%>
+<%#elif enums[f.type]%>
 <%indent%>_<%camel fname%> = other._<%camel fname%>;
 <%#else%>
 <%indent%>if (other._<%camel fname%> != null)
@@ -735,10 +735,10 @@ namespace <%pascal_dotted package%>
 <%#define emit_merge(fname, f, indent)%>
 <%#if f.label == "repeated"%>
 <%indent%>_<%camel fname%>.Add(other._<%camel fname%>);
-<%#elif csharp_type.<%f.type%>%>
-<%indent%>if (other._<%camel fname%> != <%csharp_default f.type%>)
+<%#elif csharp_type[f.type]%>
+<%indent%>if (other._<%camel fname%> != <%csharp_default[f.type]%>)
 <%indent%>    _<%camel fname%> = other._<%camel fname%>;
-<%#elif enums.<%f.type%>%>
+<%#elif enums[f.type]%>
 <%indent%>if (other._<%camel fname%> != 0)
 <%indent%>    _<%camel fname%> = other._<%camel fname%>;
 <%#else%>
@@ -1101,13 +1101,13 @@ namespace Acme.Widgets
 | v1 (AST-oriented) | v2 (data-oriented) |
 |---|---|
 | `@Field` discriminated union with 5 variants | One `@Field` type, template resolves category |
-| `kind: @ScalarField`, `kind: @EnumRef`, etc. | `<%#if enums.<%f.type%>%>` in template |
+| `kind: @ScalarField`, `kind: @EnumRef`, etc. | `<%#if enums[f.type]%>` in template |
 | Enums as `[{ name: SPROCKET, number: 1 }]` | Enums as `{ SPROCKET: 1 }` |
 | Messages as `[{ name: Widget, fields: [...] }]` | Messages as `{ Widget: { fields: {...} } }` |
 | Services as array of objects | Services as `{ WidgetService: { GetWidget: {...} } }` |
 | Field names stored in `name` property | Field names are map keys |
 | `#each` iterates arrays of named objects | `#each` iterates maps as `key, value` |
-| `exists_in()` function needed for type lookup | Path existence check: `enums.<%type%>` |
+| `exists_in()` function needed for type lookup | Bracket lookup: `enums[type]` |
 | ~150 lines of schema with 12 `@Types` | ~50 lines of schema with 5 `@Types` |
 
 The schema shrank 3x because maps eliminated the need for named-object wrappers. The template got simpler because type resolution is just path existence, not discriminated union dispatch. The HJSON intermediate reads like something a human would write.

@@ -176,6 +176,42 @@ Square brackets denote arrays. An array of objects uses `[{...}]`. An array of t
 }
 ```
 
+### Maps
+
+Curly braces with a type denote maps — HJSON objects whose keys are strings and values conform to a type. Maps enforce key uniqueness and enable O(1) lookup by key.
+
+```hjson
+{
+  enums: {@Enum}?            # map of enum name → @Enum
+  messages: {@Message}?      # map of message name → @Message
+  options: {string}?         # map of option name → string value
+}
+```
+
+Maps are the natural choice for named, lookup-heavy collections. Use arrays when ordering matters or elements are anonymous. Use maps when elements have unique names and you need to look them up by name.
+
+In templates, maps support both dot access for literal keys and bracket access for dynamic keys:
+
+```
+<%enums.WidgetType%>         # literal key — known at template-write time
+<%enums[f.type]%>            # dynamic key — resolved at template-eval time
+```
+
+Maps are iterated with `#each` using key-value destructuring:
+
+```
+<%#each enums as name, values%>
+public enum <%pascal name%> { ... }
+<%/each%>
+```
+
+In grammars, the `[name]` path notation maps parsed data into map keys:
+
+```
+enum_decl: "enum" name:IDENT "{" enum_body* "}"
+  -> enums[name]
+```
+
 ### Defaults
 
 `= value` after the type provides a default. If the grammar doesn't populate the field, the schema fills it automatically. The template never sees missing required fields.
@@ -370,10 +406,10 @@ Generating C# or JavaScript? Use `<% %>`. Generating XML? Use `{% %}`. Generatin
 
 ```
 <?yt delim="<% %>" ?>
-<%#each messages as msg%>
-public class <%msg.name%> {
-    <%#each msg.fields as f%>
-    public <%csharp_type f.type%> <%f.name%> { get; set; }
+<%#each messages as msg_name, msg%>
+public class <%pascal msg_name%> {
+    <%#each msg.fields as fname, f%>
+    public <%csharp_type[f.type]%> <%pascal fname%> { get; set; }
     <%/each%>
 }
 <%/each%>
@@ -385,24 +421,24 @@ The `#output` directive routes output to named files. A single template can prod
 
 ```
 <?yt delim="<% %>" ?>
-<%#each messages as msg%>
+<%#each messages as msg_name, msg%>
 
-<%#output "<%msg.name%>.cs" %>
+<%#output "<%pascal msg_name%>.cs" %>
 using System;
 
-public class <%msg.name%> {
-    <%#each msg.fields as f%>
-    public <%csharp_type f.type%> <%f.name%> { get; set; }
+public class <%pascal msg_name%> {
+    <%#each msg.fields as fname, f%>
+    public <%csharp_type[f.type]%> <%pascal fname%> { get; set; }
     <%/each%>
 }
 <%/output%>
 
-<%#output "<%msg.name%>.java" %>
+<%#output "<%pascal msg_name%>.java" %>
 package <%package%>;
 
-public class <%msg.name%> {
-    <%#each msg.fields as f%>
-    private <%java_type f.type%> <%f.name%>;
+public class <%pascal msg_name%> {
+    <%#each msg.fields as fname, f%>
+    private <%java_type[f.type]%> <%camel fname%>;
     <%/each%>
 }
 <%/output%>
@@ -414,7 +450,8 @@ public class <%msg.name%> {
 
 | Directive | Purpose |
 |-----------|---------|
-| `#each collection as item` | Iterate over an array |
+| `#each array as item` | Iterate over an array |
+| `#each map as key, value` | Iterate over a map's key-value pairs |
 | `#if condition` | Conditional block |
 | `#elif condition` | Else-if branch |
 | `#else` | Else branch |
@@ -425,13 +462,32 @@ public class <%msg.name%> {
 
 ### Value Expressions
 
-Values are emitted by placing a dotted path inside delimiters:
+Values are emitted by placing a path inside delimiters. Two access modes:
+
+- **Dot** for literal keys known at template-write time: `msg.name`, `enums.WidgetType`
+- **Brackets** for dynamic keys resolved at template-eval time: `enums[f.type]`, `csharp_type[f.type]`
 
 ```
-<%msg.name%>                  # field access
-<%msg.fields.length%>         # array length
-<%csharp_type msg.type%>      # function call
+<%msg.name%>                  # literal field access
+<%msg.fields.length%>         # array/map length
+<%csharp_type[f.type]%>       # dynamic map lookup
+<%enums[f.type]%>             # dynamic existence + value
+<%pascal msg.name%>           # built-in function call
 ```
+
+Bracket lookups also serve as existence checks in `#if`:
+
+```
+<%#if enums[f.type]%>
+  ...type is an enum...
+<%#elif csharp_type[f.type]%>
+  ...type is a scalar...
+<%#else%>
+  ...type is a message ref...
+<%/if%>
+```
+
+If the key doesn't exist in the map, the bracket lookup evaluates to absent (falsy in `#if`, empty string in value position). This is the primary mechanism for cross-referencing data — no special query functions needed.
 
 ### Optionality in Templates
 
@@ -485,12 +541,12 @@ Templates can call built-in transformation functions:
 | `first` | Boolean, true on first iteration |
 | `last` | Boolean, true on last iteration |
 
-### User-Defined Functions
+### User-Defined Lookup Tables
 
-Type mapping and other custom transformations are defined in a functions file:
+Type mapping and other custom transformations are defined in a functions file as maps. They're accessed using bracket notation in templates:
 
 ```hjson
-# functions.hjson — type mapping tables and transforms
+# functions.hjson — lookup tables
 {
   csharp_type: {
     int32: "int"
@@ -514,10 +570,19 @@ Type mapping and other custom transformations are defined in a functions file:
 }
 ```
 
-Used in templates as simple lookups:
+Used in templates with bracket notation:
 
 ```
-<%csharp_type f.type%>     # looks up f.type in the csharp_type table
+<%csharp_type[f.type]%>     # looks up f.type in the csharp_type map
+<%java_type[f.type]%>       # looks up f.type in the java_type map
+```
+
+Lookup tables are also usable in `#if` — a missing key evaluates to absent:
+
+```
+<%#if csharp_type[f.type]%>
+  ...it's a known scalar type...
+<%/if%>
 ```
 
 ### Separator Support
@@ -579,28 +644,20 @@ yeetcode check \
 ```hjson
 {
   @Field: {
-    name: string
     type: string
     tag: int
     label: string = "optional"
     deprecated: bool = false
   }
 
-  @EnumValue: {
-    name: string
-    number: int
-  }
-
   package: string?
   syntax: string = "proto3"
-  messages: [{
-    name: string
-    fields: [@Field]
-  }]
-  enums: [{
-    name: string
-    values: [@EnumValue]
-  }]?
+  messages: {
+    @: {
+      fields: {@Field}
+    }
+  }?
+  enums: {}?
 }
 ```
 
@@ -631,69 +688,73 @@ After `yeetcode parse`, the validated HJSON looks like:
 {
   syntax: proto3
   package: acme.widgets
-  messages: [
-    {
-      name: Widget
-      fields: [
-        { name: name,     type: string, tag: 1, label: required, deprecated: false }
-        { name: quantity,  type: int32,  tag: 2, label: optional, deprecated: false }
-        { name: tags,      type: string, tag: 3, label: repeated, deprecated: false }
-      ]
+  messages: {
+    Widget: {
+      fields: {
+        name:     { type: string, tag: 1, label: required, deprecated: false }
+        quantity: { type: int32,  tag: 2, label: optional, deprecated: false }
+        tags:     { type: string, tag: 3, label: repeated, deprecated: false }
+      }
     }
-  ]
-  enums: [
-    {
-      name: WidgetType
-      values: [
-        { name: UNKNOWN,  number: 0 }
-        { name: SPROCKET, number: 1 }
-        { name: GEAR,     number: 2 }
-      ]
+  }
+  enums: {
+    WidgetType: {
+      UNKNOWN: 0
+      SPROCKET: 1
+      GEAR: 2
     }
-  ]
+  }
 }
 ```
 
-This file is human-readable, human-editable, and self-describing. Defaults have been filled (`deprecated: false`). Any hand edits here will be validated against the schema before templates run.
+This file is human-readable, human-editable, and self-describing. Defaults have been filled (`deprecated: false`). Every name is a map key — no `name` fields inside objects. Any hand edits here will be validated against the schema before templates run.
 
 ### Template (`csharp.yt`)
 
 ```
 <?yt delim="<% %>" ?>
-<%#each messages as msg%>
-<%#output "<%pascal msg.name%>.cs"%>
+<%#each messages as msg_name, msg%>
+<%#output "<%pascal msg_name%>.cs"%>
 // Auto-generated by Yeetcode — do not edit
 using System;
 using System.Collections.Generic;
 
-namespace <%package?.replace(".", ".")%>
+<%#if package%>
+namespace <%pascal_dotted package%>
 {
-    public class <%pascal msg.name%>
+<%/if%>
+    public class <%pascal msg_name%>
     {
-        <%#each msg.fields as f%>
+        <%#each msg.fields as fname, f%>
         <%#if f.label == "repeated"%>
-        public List<<%csharp_type f.type%>> <%pascal f.name%> { get; set; } = new();
+        public List<<%csharp_type[f.type]%>> <%pascal fname%> { get; set; } = new();
         <%#else%>
-        public <%csharp_type f.type%> <%pascal f.name%> { get; set; }
+        public <%csharp_type[f.type]%> <%pascal fname%> { get; set; }
         <%/if%>
         <%/each%>
     }
+<%#if package%>
 }
+<%/if%>
 <%/output%>
 <%/each%>
 
-<%#each enums as e%>
-<%#output "<%pascal e.name%>.cs"%>
+<%#each enums as enum_name, values%>
+<%#output "<%pascal enum_name%>.cs"%>
 // Auto-generated by Yeetcode — do not edit
-namespace <%package?.replace(".", ".")%>
+<%#if package%>
+namespace <%pascal_dotted package%>
 {
-    public enum <%pascal e.name%>
+<%/if%>
+    public enum <%pascal enum_name%>
     {
-        <%#each e.values as v%>
-        <%v.name%> = <%v.number%>,
+        <%#each values as name, number%>
+        <%name%> = <%number%>,
         <%/each%>
     }
+<%#if package%>
 }
+<%/if%>
 <%/output%>
 <%/each%>
 ```
@@ -708,7 +769,7 @@ Running `yeetcode generate` with the above produces:
 using System;
 using System.Collections.Generic;
 
-namespace acme.widgets
+namespace Acme.Widgets
 {
     public class Widget
     {
@@ -722,7 +783,7 @@ namespace acme.widgets
 **`WidgetType.cs`**
 ```csharp
 // Auto-generated by Yeetcode — do not edit
-namespace acme.widgets
+namespace Acme.Widgets
 {
     public enum WidgetType
     {
@@ -752,6 +813,10 @@ namespace acme.widgets
 7. **Defaults eliminate null checks.** The schema declares defaults for required fields. The template never handles missing values for non-optional fields. This is a static guarantee, not a runtime convention.
 
 8. **The HJSON is editable.** Someone can skip the grammar entirely, hand-write HJSON conforming to the schema, and run templates. Or parse with the grammar and hand-edit the result. The pipeline stages are independent.
+
+9. **Maps over arrays for named things.** Named, unique, lookup-heavy collections use maps — HJSON objects keyed by name. This eliminates `name` fields inside objects, enforces uniqueness, enables O(1) lookup, and lets templates resolve cross-references by path existence.
+
+10. **Dot for literal, brackets for dynamic.** `enums.WidgetType` accesses a known key. `enums[f.type]` accesses a dynamic key. Bracket lookups double as existence checks in `#if` — no special query functions needed.
 
 ---
 
