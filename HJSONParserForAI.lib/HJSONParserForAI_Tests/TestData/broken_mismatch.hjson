@@ -1,0 +1,33 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST FILE: broken_mismatch.hjson
+# PURPOSE: Validate detection of MISMATCHED DELIMITER errors
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTENTIONAL ERROR LOCATION: Line 17 - Array opened with [ but closed with }
+# EXPECTED DETECTION: MismatchedPair error
+# ═══════════════════════════════════════════════════════════════════════════════
+{
+  crucible: test_mismatch_error
+  version: 1.0
+  description: Test file with intentional delimiter mismatch
+  
+  # Valid section first
+  config: {
+    name: test
+  }
+  
+  # INTENTIONAL ERROR: Array opened with [ but closed with }
+  items: [
+    first_item
+    second_item
+    third_item
+  }
+  # The ] should be } - this is the mismatch!
+  
+  # Parser should catch { opened, } closes but doesn't match [ opener
+  
+  # More content after the error
+  metadata: {
+    author: test
+    version: 1.0
+  }
+}

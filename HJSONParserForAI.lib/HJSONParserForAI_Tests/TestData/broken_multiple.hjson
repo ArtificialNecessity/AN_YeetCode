@@ -1,0 +1,39 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST FILE: broken_multiple.hjson
+# PURPOSE: Validate detection of MULTIPLE SIMULTANEOUS errors
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTENTIONAL ERRORS:
+#   1. Line 14: Unclosed brace in "database" block
+#   2. Line 24: Extra/unmatched closing bracket ]
+#   3. Line 30: Mismatched brace-bracket pair
+# EXPECTED: Parser should detect all three errors with appropriate hypotheses
+# ═══════════════════════════════════════════════════════════════════════════════
+{
+  crucible: test_multiple_errors
+  version: 1.0
+  
+  # ERROR 1: Unclosed brace - never closed
+  database: {
+    host: localhost
+    port: 5432
+    # INTENTIONAL: Missing } to close database
+  
+  # ERROR 2: Extra unmatched closer
+  cache: {
+    enabled: true
+  }
+  ]
+  # The ] above has no matching [ opener!
+  
+  # ERROR 3: Mismatched pair
+  features: [
+    feature_one
+    feature_two
+  }
+  # The } should be ] to match the [ opener
+  
+  # Final section - should be in quarantined region
+  logging: {
+    level: info
+  }
+}

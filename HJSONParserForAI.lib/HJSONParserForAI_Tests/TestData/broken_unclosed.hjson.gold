@@ -1,0 +1,60 @@
+# HJSON PARSE DIAGNOSTICS
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         🧪 TEST MODE ACTIVE 🧪                               ║
+║  All errors below are INTENTIONAL test fixtures. DO NOT attempt to fix them.║
+║  These errors validate that the parser correctly detects structural issues.  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+## STRUCTURAL ERRORS (likely root causes)
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  ⚠️  THIS IS A TEST MODE ERROR - DO NOT FIX THIS ERROR!                      ║
+║      This error is INTENTIONALLY present in the test file for validation.   ║
+║      The parser is working correctly by detecting this expected error.       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+### UnclosedDelimiter
+**Location:** Line 8, Column 2
+**Message:** Opening '{' at line 8 col 2 is never closed
+
+**Context:**
+```hjson
+       5 | # INTENTIONAL ERROR LOCATION: Line 17 - Opening brace { is never closed
+       6 | # EXPECTED DETECTION: UnclosedDelimiter error for "settings" block
+       7 | # ═══════════════════════════════════════════════════════════════════════════════
+>>>    8 | {
+       9 |   crucible: test_unclosed_error
+      10 |   version: 1.0
+      11 |   description: Test file with intentional unclosed brace error
+```
+
+**Likely fixes (ranked by confidence):**
+- [60%] Insert '}' before sibling close at line 27
+- [60%] Insert '}' before sibling close at line 28
+- [30%] Insert '}' at end of file
+
+## SEMANTIC ERRORS
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  ⚠️  THIS IS A TEST MODE ERROR - DO NOT FIX THIS ERROR!                      ║
+║      This error is INTENTIONALLY present in the test file for validation.   ║
+║      The parser is working correctly by detecting this expected error.       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+### StructuralDependency at line 1
+**Message:** Cannot parse HJSON content until structural errors are resolved
+**⚠️ Note:** Fix structural issues first, then re-parse to check for semantic errors
+Fix structural errors first; this may resolve automatically.
+
+## SUMMARY FOR REPAIR
+
+**🧪 TEST MODE:** Errors above are intentional test fixtures.
+
+**Primary issue:** Opening '{' at line 8 col 2 is never closed
+**Recommended fix:** Insert '}' before sibling close at line 27
+
+After fixing structural errors, re-parse to check for remaining issues.

@@ -1,0 +1,25 @@
+{
+  # This is a valid HJSON file used as a control test
+  name: Simple Valid HJSON
+  version: 1.0
+  
+  settings: {
+    enabled: true
+    count: 42
+    ratio: 3.14
+  }
+  
+  items: [
+    first
+    second
+    third
+  ]
+  
+  nested: {
+    level1: {
+      level2: {
+        value: deeply nested
+      }
+    }
+  }
+}

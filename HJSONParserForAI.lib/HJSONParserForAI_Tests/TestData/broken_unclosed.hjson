@@ -1,0 +1,28 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# TEST FILE: broken_unclosed.hjson
+# PURPOSE: Validate detection of UNCLOSED DELIMITER errors
+# ═══════════════════════════════════════════════════════════════════════════════
+# INTENTIONAL ERROR LOCATION: Line 17 - Opening brace { is never closed
+# EXPECTED DETECTION: UnclosedDelimiter error for "settings" block
+# ═══════════════════════════════════════════════════════════════════════════════
+{
+  crucible: test_unclosed_error
+  version: 1.0
+  description: Test file with intentional unclosed brace error
+  
+  # Everything above this is valid
+  # The error starts here - this settings block is never closed
+  
+  settings: {
+    enabled: true
+    timeout: 30
+    retries: 3
+    # INTENTIONAL ERROR: Missing } to close settings
+    # The parser should detect this unclosed delimiter
+  
+  # This next section will be parsed in a damaged context
+  logging: {
+    level: debug
+    output: console
+  }
+}
