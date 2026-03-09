@@ -11,22 +11,15 @@ The HJSON parser includes a gold file testing system that automatically runs on 
 Tests run automatically on every `dotnet build`. You can also run tests manually:
 
 ```powershell
-# Run tests
-dotnet run --project utils/HJSONParserForAI/HJSONParserForAI.csproj --no-build -- --test
-
-# Or just build (tests run automatically)
-dotnet build utils/HJSONParserForAI/HJSONParserForAI.csproj
+# Run tests with dotnet test
+dotnet test YeetJson.lib/YeetJson_Tests/YeetJson_Tests.csproj
 ```
 
 ### Generating Gold Files
 
 When you add new test files or change the parser behavior, regenerate gold files:
 
-```powershell
-dotnet run --project utils/HJSONParserForAI/HJSONParserForAI.csproj -- --gold
-```
-
-This will create/update `.hjson.gold` files for all `.hjson` files in `Tests/TestData/`.
+Gold files are manually created and stored in `YeetJson_Tests/TestData/` alongside the test `.hjson` files.
 
 ## Gold File Format
 
@@ -61,9 +54,8 @@ Tests/TestData/
 
 ## Implementation
 
-- [`TestHJsonFiles.cs`](utils/HJSONParserForAI/Tests/TestHJsonFiles.cs) - Test runner with gold file logic
-- [`HjsonDiagnosticCommandLine.cs`](utils/HJSONParserForAI/HjsonDiagnosticCommandLine.cs) - CLI entry point
-- [`HJSONParserForAI.csproj`](utils/HJSONParserForAI/HJSONParserForAI.csproj) - PostBuildEvent configuration
+- [`TestHJsonFiles.cs`](../YeetJson_Tests/TestHJsonFiles.cs) - Test runner with gold file logic
+- [`YeetJson_Tests.csproj`](../YeetJson_Tests/YeetJson_Tests.csproj) - Test project configuration
 
 ## Design Philosophy
 

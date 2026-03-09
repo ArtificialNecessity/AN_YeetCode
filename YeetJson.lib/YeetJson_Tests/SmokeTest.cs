@@ -1,8 +1,8 @@
 using System.Text.Json;
-using HJSONParserForAI.Core;
+using YeetJson;
 using Xunit;
 
-namespace HJSONParserForAI_Tests;
+namespace YeetJson_Tests;
 
 /// <summary>
 /// Smoke tests for the HJSON content parser.
@@ -78,17 +78,17 @@ public class SmokeTest
         Assert.Empty(parseResult.SemanticErrors);
 
         var root = parseResult.ParsedDocument.RootElement;
-        
+
         // Verify __keyAttributes exists
         Assert.True(root.TryGetProperty("__keyAttributes", out var keyAttrs));
-        
+
         // Verify name attributes
         Assert.True(keyAttrs.TryGetProperty("name", out var nameAttrs));
         Assert.True(nameAttrs.TryGetProperty("default", out var defaultAttr));
         Assert.Equal("a string with spaces and newlines \n\n", defaultAttr.GetString());
         Assert.True(nameAttrs.TryGetProperty("optional", out var optionalAttr));
         Assert.True(optionalAttr.GetBoolean());
-        
+
         // Verify count attributes
         Assert.True(keyAttrs.TryGetProperty("count", out var countAttrs));
         Assert.True(countAttrs.TryGetProperty("default", out var countDefault));

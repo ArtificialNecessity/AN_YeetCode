@@ -1,7 +1,7 @@
-using HJSONParserForAI.Core;
+using YeetJson;
 using Xunit;
 
-namespace HJSONParserForAI_Tests;
+namespace YeetJson_Tests;
 
 /// <summary>
 /// Gold file tests for HJSON parser.

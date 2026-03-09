@@ -69,7 +69,7 @@ See [**Intro to YeetCode**](_SPECS/IntroToYeetCode.md) for a complete walkthroug
 
 ## Project Structure
 
-- **HJSONParserForAI.lib/** — Two-phase HJSON parser with AI-friendly diagnostics
+- **YeetJson.lib/** — Two-phase HJSON parser with AI-friendly diagnostics (formerly HJSONParserForAI)
 - **YeetCode.lib/** — Core YeetCode implementation
   - `Schema/` — Schema loading and validation
   - `Template/` — Template engine with custom delimiters

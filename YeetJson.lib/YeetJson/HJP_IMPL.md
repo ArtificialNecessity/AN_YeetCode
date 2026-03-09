@@ -28,7 +28,7 @@ graph TD
 ## Project Structure
 
 ```
-HJSONParserForAI/
+YeetJson/
 ├── HJP_IMPL.md                     # This file
 ├── Core/
 │   ├── DataStructures.cs          # Delimiter, Error, Hypothesis records
@@ -60,7 +60,7 @@ HJSONParserForAI/
 Create `Core/DataStructures.cs` with the following records and enums:
 
 ```csharp
-namespace HJSONParserForAI.Core;
+namespace YeetJson.Core;
 
 /// <summary>
 /// Types of delimiters tracked during structural analysis
@@ -193,7 +193,7 @@ public record ParseResult(
 Create `Core/StructuralAnalyzer.cs`:
 
 ```csharp
-namespace HJSONParserForAI.Core;
+namespace YeetJson.Core;
 
 /// <summary>
 /// Phase 1: Scans source text for structural validity
@@ -550,7 +550,7 @@ public class StructuralAnalyzer
 Create `HypothesisGenerators/UnclosedHypothesisGen.cs`:
 
 ```csharp
-namespace HJSONParserForAI.HypothesisGenerators;
+namespace YeetJson.HypothesisGenerators;
 
 public static class UnclosedHypothesisGenerator
 {
@@ -695,7 +695,7 @@ Create similar generators for `MismatchHypothesisGen.cs` and `UnmatchedCloseHypo
 Create `Core/RegionIsolator.cs`:
 
 ```csharp
-namespace HJSONParserForAI.Core;
+namespace YeetJson.Core;
 
 public static class RegionIsolator
 {
@@ -773,7 +773,7 @@ public static class RegionIsolator
 Create `Core/DiagnosticFormatter.cs`:
 
 ```csharp
-namespace HJSONParserForAI.Core;
+namespace YeetJson.Core;
 
 using System.Text;
 
@@ -901,7 +901,7 @@ For the initial implementation, Phase 2 can be a **stub** that focuses on provin
 Create `Core/HjsonParser.cs`:
 
 ```csharp
-namespace HJSONParserForAI.Core;
+namespace YeetJson.Core;
 
 /// <summary>
 /// Phase 2: Parse HJSON content with structural awareness
@@ -943,9 +943,9 @@ public class HjsonParser
 Create `Examples/UsageExample.cs`:
 
 ```csharp
-namespace HJSONParserForAI.Examples;
+namespace YeetJson.Examples;
 
-using HJSONParserForAI.Core;
+using YeetJson.Core;
 
 public class UsageExample
 {

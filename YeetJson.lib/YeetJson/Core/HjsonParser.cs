@@ -1,4 +1,4 @@
-namespace HJSONParserForAI.Core;
+namespace YeetJson;
 
 using System.Buffers;
 using System.Text;
@@ -196,7 +196,8 @@ public class HjsonContentParser
 
             // Check for key attributes: key [attr1, attr2:value]
             var keyAttributes = TryReadKeyAttributes();
-            if (keyAttributes != null) {
+            if (keyAttributes != null)
+            {
                 collectedKeyAttributes ??= new Dictionary<string, Dictionary<string, string>>();
                 collectedKeyAttributes[memberKey] = keyAttributes;
             }
@@ -229,20 +230,28 @@ public class HjsonContentParser
         }
 
         // Emit __keyAttributes node if any keys had attributes and emission is enabled
-        if (collectedKeyAttributes != null && _parserOptions.EmitKeyAttributes) {
+        if (collectedKeyAttributes != null && _parserOptions.EmitKeyAttributes)
+        {
             jsonWriter.WritePropertyName(_parserOptions.KeyAttributesNodeName);
             jsonWriter.WriteStartObject();
-            foreach (var (attributedKeyName, attributeMap) in collectedKeyAttributes) {
+            foreach (var (attributedKeyName, attributeMap) in collectedKeyAttributes)
+            {
                 jsonWriter.WritePropertyName(attributedKeyName);
                 jsonWriter.WriteStartObject();
-                foreach (var (attrName, attrValue) in attributeMap) {
+                foreach (var (attrName, attrValue) in attributeMap)
+                {
                     jsonWriter.WritePropertyName(attrName);
                     // Write "true" as boolean true, everything else as string
-                    if (attrValue == "true") {
+                    if (attrValue == "true")
+                    {
                         jsonWriter.WriteBooleanValue(true);
-                    } else if (attrValue == "false") {
+                    }
+                    else if (attrValue == "false")
+                    {
                         jsonWriter.WriteBooleanValue(false);
-                    } else {
+                    }
+                    else
+                    {
                         jsonWriter.WriteStringValue(attrValue);
                     }
                 }
@@ -386,7 +395,8 @@ public class HjsonContentParser
     /// </summary>
     private Dictionary<string, string>? TryReadKeyAttributes()
     {
-        if (_position >= _sourceText.Length || _sourceText[_position] != '[') {
+        if (_position >= _sourceText.Length || _sourceText[_position] != '[')
+        {
             return null;
         }
 
@@ -404,7 +414,8 @@ public class HjsonContentParser
             {
                 char attrChar = _sourceText[_position];
                 if (attrChar == ':' || attrChar == ',' || attrChar == ']' ||
-                    attrChar == '\n' || attrChar == '\r') {
+                    attrChar == '\n' || attrChar == '\r')
+                {
                     break;
                 }
                 Advance();
@@ -418,7 +429,7 @@ public class HjsonContentParser
             {
                 Advance(); // skip ':'
                 SkipWhitespaceAndComments();
-                
+
                 // Check if value is a quoted string
                 if (_position < _sourceText.Length && _sourceText[_position] == '"')
                 {
@@ -433,7 +444,8 @@ public class HjsonContentParser
                     {
                         char valChar = _sourceText[_position];
                         if (valChar == ',' || valChar == ']' ||
-                            valChar == '\n' || valChar == '\r') {
+                            valChar == '\n' || valChar == '\r')
+                        {
                             break;
                         }
                         Advance();

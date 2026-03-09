@@ -6,8 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Features>FileBasedPrograms</Features>
-    <RootNamespace>HJSONParserForAI</RootNamespace>
-    <AssemblyName>HJSONParserForAI</AssemblyName>
+    <RootNamespace>YeetJson</RootNamespace>
+    <AssemblyName>YeetJson</AssemblyName>
     <Version>1.0.0</Version>
     <Description>Two-Phase HJSON Parser with AI-Friendly Diagnostics</Description>
   </PropertyGroup>

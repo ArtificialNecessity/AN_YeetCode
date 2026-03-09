@@ -1,6 +1,4 @@
-namespace HJSONParserForAI.HypothesisGenerators;
-
-using HJSONParserForAI.Core;
+namespace YeetJson.HypothesisGenerators;
 
 /// <summary>
 /// Generates repair hypotheses for mismatched delimiter pairs

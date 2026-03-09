@@ -32,8 +32,8 @@ AN_YeetCode/
 │   ├── 20_ProtoBuff_YeetCode.md       # Protobuf example: schema + grammar + template
 │   └── Two_Phase_Parsing_For_AI_Friendly_Diagnostics.md
 │
-├── HJSONParserForAI.lib/              # HJSON Parser library (existing, needs Phase 2)
-│   ├── HJSONParserForAI/
+├── YeetJson.lib/                      # YeetJson Parser library (formerly HJSONParserForAI)
+│   ├── YeetJson/
 │   │   ├── Core/
 │   │   │   ├── DataStructures.cs      # Delimiter, Error, Hypothesis, Region records
 │   │   │   ├── StructuralAnalyzer.cs  # Phase 1: bracket/quote matching
@@ -44,8 +44,8 @@ AN_YeetCode/
 │   │   │   ├── UnclosedHypothesisGenerator.cs
 │   │   │   ├── MismatchHypothesisGenerator.cs
 │   │   │   └── UnmatchedCloseHypothesisGenerator.cs
-│   │   └── HJSONParserForAI.csproj    # net10.0 library
-│   └── HJSONParserForAI_Tests/
+│   │   └── YeetJson.csproj            # net10.0 library
+│   └── YeetJson_Tests/
 │       ├── TestHJsonFiles.cs          # Gold file test runner
 │       └── TestData/                  # Test HJSON files + gold files
 │
@@ -98,12 +98,12 @@ graph TD
     Template --> Schema
     Grammar --> Core
     Grammar --> Schema
-    Core --> HJSON[HJSONParserForAI]
+    Core --> HJSON[YeetJson]
 ```
 
 ## Component Architecture
 
-### 1. HJSONParserForAI (existing library, needs completion)
+### 1. YeetJson (formerly HJSONParserForAI)
 
 Two-phase parser with AI-friendly diagnostics:
 - **Phase 1** (DONE): Structural analysis — bracket/quote matching, error detection, repair hypotheses
@@ -242,7 +242,7 @@ Command-line interface:
 
 ## Future Work (not in current scope)
 
-- **Rename parser to YeetJson** — the HJSON parser library (`HJSONParserForAI`) will eventually be renamed to `YeetJson` to reflect its extended capabilities beyond standard HJSON (key attributes, strictness levels, etc.)
+- **YeetJson library** — the HJSON parser library has been renamed from `HJSONParserForAI` to `YeetJson` to reflect its extended capabilities beyond standard HJSON (key attributes, strictness levels, etc.)
 - **Parser strictness levels** — the parser should support configurable strictness modes:
   - **Strict JSON** — standard JSON only, no extensions
   - **JSONC** — JSON with comments (`//`, `/* */`)

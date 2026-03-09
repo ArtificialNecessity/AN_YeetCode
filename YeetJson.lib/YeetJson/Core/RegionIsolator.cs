@@ -1,4 +1,4 @@
-namespace HJSONParserForAI.Core;
+namespace YeetJson;
 
 /// <summary>
 /// Phase 1.5: Identifies healthy vs damaged regions of source code

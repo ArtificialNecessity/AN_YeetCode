@@ -1,6 +1,5 @@
-namespace HJSONParserForAI.HypothesisGenerators;
+namespace YeetJson.HypothesisGenerators;
 
-using HJSONParserForAI.Core;
 using System.Text.RegularExpressions;
 
 /// <summary>

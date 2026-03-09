@@ -1,4 +1,4 @@
-namespace HJSONParserForAI.Core;
+namespace YeetJson;
 
 using System.Text;
 

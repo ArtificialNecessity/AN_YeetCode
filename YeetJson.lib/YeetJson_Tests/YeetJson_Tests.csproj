@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HJSONParserForAI\HJSONParserForAI.csproj" />
+    <ProjectReference Include="..\YeetJson\YeetJson.csproj" />
   </ItemGroup>
 
   <ItemGroup>
