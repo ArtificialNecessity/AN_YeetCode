@@ -1,0 +1,13 @@
+# Simple protobuf grammar for integration testing
+# Parses: message Widget { string name = 1; int32 quantity = 2; }
+
+file ::= message*
+
+message ::= "message" name:IDENT "{" fields:field* "}"
+
+field ::= type:IDENT name:IDENT "=" tag:INT ";"
+
+IDENT ::= /[a-zA-Z_][a-zA-Z0-9_]*/
+INT ::= /[0-9]+/
+
+%skip ::= /(?:\s|\/\/[^\n]*)*/
