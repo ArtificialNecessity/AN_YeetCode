@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "YTSON",
+  "scopeName": "source.ytson",
+  "comment": "Stub — will be fleshed out in Phase 2. For now, reuses HJSON patterns.",
+  "patterns": [
+    { "include": "source.hjson" }
+  ]
+}

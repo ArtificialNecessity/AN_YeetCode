@@ -1,0 +1,64 @@
+{
+  "name": "yeetcode-language-support",
+  "displayName": "YeetCode Language Support",
+  "description": "Syntax highlighting for YeetCode file formats: HJSON, YTSON schemas, YTGMR grammars, and YTMPL templates",
+  "version": "0.1.0",
+  "publisher": "ArtificialNecessity",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "hjson",
+        "aliases": ["HJSON", "Human JSON"],
+        "extensions": [".hjson"],
+        "configuration": "./language-configuration/hjson.language-configuration.json"
+      },
+      {
+        "id": "ytson",
+        "aliases": ["YTSON", "YeetCode Schema"],
+        "extensions": [".ytson"],
+        "configuration": "./language-configuration/ytson.language-configuration.json"
+      },
+      {
+        "id": "ytgmr",
+        "aliases": ["YTGMR", "YeetCode Grammar"],
+        "extensions": [".ytgmr", ".yeet"],
+        "configuration": "./language-configuration/ytgmr.language-configuration.json"
+      },
+      {
+        "id": "ytmpl",
+        "aliases": ["YTMPL", "YeetCode Template"],
+        "extensions": [".ytmpl", ".yt"],
+        "configuration": "./language-configuration/ytmpl.language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "hjson",
+        "scopeName": "source.hjson",
+        "path": "./syntaxes/hjson.tmLanguage.json"
+      },
+      {
+        "language": "ytson",
+        "scopeName": "source.ytson",
+        "path": "./syntaxes/ytson.tmLanguage.json"
+      },
+      {
+        "language": "ytgmr",
+        "scopeName": "source.ytgmr",
+        "path": "./syntaxes/ytgmr.tmLanguage.json"
+      },
+      {
+        "language": "ytmpl",
+        "scopeName": "source.ytmpl",
+        "path": "./syntaxes/ytmpl.tmLanguage.json"
+      }
+    ]
+  }
+}

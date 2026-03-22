@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "YTMPL",
+  "scopeName": "source.ytmpl",
+  "comment": "Stub — will be fleshed out in Phase 4.",
+  "patterns": [
+    {
+      "name": "meta.preprocessor.ytmpl",
+      "match": "<\\?yt.*?\\?>"
+    }
+  ]
+}

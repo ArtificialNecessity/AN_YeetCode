@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "YTGMR",
+  "scopeName": "source.ytgmr",
+  "comment": "Stub — will be fleshed out in Phase 3.",
+  "patterns": [
+    {
+      "name": "comment.line.number-sign.ytgmr",
+      "match": "#[^\\n]*"
+    }
+  ]
+}
