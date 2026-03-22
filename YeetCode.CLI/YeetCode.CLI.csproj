@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="$(MSBuildThisFileDirectory)..\YeetCode.shared.Build.props" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>YeetCode.CLI</RootNamespace>
+    <AssemblyName>yeetcode</AssemblyName>
+    <PackageId>ArtificialNecessity.YeetCode.CLI</PackageId>
+    <IsPackable>true</IsPackable>
+    <VersionPrefix>0.0.0</VersionPrefix>
+    <Authors>David Jeske</Authors>
+    <Description>YeetCode CLI - Schema-driven meta-programming tool for language-to-language transformation</Description>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>yeetcode</ToolCommandName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\YeetCode.lib\YeetCode\YeetCode.csproj" />
+    <ProjectReference Include="..\YeetJson.lib\YeetJson\YeetJson.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="$(MSBuildThisFileDirectory)..\..\YeetCode.shared.Build.props" />
+
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,8 +10,11 @@
     <Features>FileBasedPrograms</Features>
     <RootNamespace>YeetJson</RootNamespace>
     <AssemblyName>YeetJson</AssemblyName>
-    <Version>1.0.0</Version>
-    <Description>Two-Phase HJSON Parser with AI-Friendly Diagnostics</Description>
+    <PackageId>ArtificialNecessity.YeetJson</PackageId>
+    <IsPackable>true</IsPackable>
+    <VersionPrefix>0.0.0</VersionPrefix>
+    <Authors>David Jeske</Authors>
+    <Description>Two-Phase JSON / HJSON / ytSON Parser with AI-Friendly Diagnostics</Description>
   </PropertyGroup>
 
 </Project>

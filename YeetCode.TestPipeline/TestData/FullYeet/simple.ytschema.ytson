@@ -1,0 +1,12 @@
+{
+  syntax: string
+  package: string
+  messages: [{
+    name: string
+    fields: [{
+      name: string
+      type: string
+      tag: int
+    }]
+  }]
+}

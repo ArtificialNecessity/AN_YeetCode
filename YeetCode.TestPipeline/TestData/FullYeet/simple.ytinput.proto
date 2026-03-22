@@ -1,0 +1,8 @@
+syntax = "proto3";
+package acme.widgets;
+
+message Widget {
+  string name = 1;
+  int32 quantity = 2;
+  string description = 3;
+}

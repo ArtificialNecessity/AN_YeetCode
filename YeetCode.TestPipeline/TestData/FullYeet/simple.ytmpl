@@ -1,0 +1,12 @@
+<?yt delim="<% %>" ?>
+// Auto-generated from <%syntax%> — do not edit
+// Package: <%package%>
+
+<%each messages as msg%>
+public class <%msg.name%>
+{
+    <%each msg.fields as f%>
+    public <%f.type%> <%f.name%> { get; set; } // tag <%f.tag%>
+    <%/each%>
+}
+<%/each%>

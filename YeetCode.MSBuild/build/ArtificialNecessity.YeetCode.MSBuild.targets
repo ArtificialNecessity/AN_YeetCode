@@ -1,0 +1,54 @@
+<Project>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       Task DLL location:
+         NuGet consumption (default): {package}/tasks/net10.0/
+         Source-tree dev: set YeetCodeTaskDir before importing this file
+       ════════════════════════════════════════════════════════════════ -->
+  <PropertyGroup>
+    <YeetCodeTaskDir Condition="'$(YeetCodeTaskDir)' == ''">$(MSBuildThisFileDirectory)..\tasks\net10.0\</YeetCodeTaskDir>
+  </PropertyGroup>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       YeetCodeGenerate — Full pipeline MSBuild task (out-of-process)
+
+       TaskHostFactory runs the task in a separate MSBuild.exe process.
+       This prevents DLL locking — you can rebuild the task DLL and it
+       will be picked up on the next build without shutting down MSBuild.
+
+       Usage:
+         <YeetCodeGenerate
+           SchemaFile="proto.schema.ytson"
+           GrammarFile="proto.grammar.yeet"
+           InputFile="widgets.proto"
+           TemplateFile="proto-csharp.yt"
+           FunctionsFile="functions.hjson"
+           OutputDirectory="generated/"
+           Defines="syntax=proto3" />
+       ════════════════════════════════════════════════════════════════ -->
+
+  <UsingTask
+    TaskName="YeetCode.MSBuild.YeetCodeGenerateTask"
+    AssemblyFile="$(YeetCodeTaskDir)ArtificialNecessity.YeetCode.MSBuild.dll"
+    TaskFactory="TaskHostFactory" />
+
+  <!-- ════════════════════════════════════════════════════════════════
+       YeetCodeTemplate — Half-yeet MSBuild task (out-of-process)
+
+       HJSON data + template → output (no grammar parsing)
+
+       Usage:
+         <YeetCodeTemplate
+           DataFile="data.hjson"
+           TemplateFile="template.yt"
+           SchemaFile="schema.ytson"
+           FunctionsFile="functions.hjson"
+           OutputDirectory="generated/" />
+       ════════════════════════════════════════════════════════════════ -->
+
+  <UsingTask
+    TaskName="YeetCode.MSBuild.YeetCodeTemplateTask"
+    AssemblyFile="$(YeetCodeTaskDir)ArtificialNecessity.YeetCode.MSBuild.dll"
+    TaskFactory="TaskHostFactory" />
+
+</Project>

@@ -1,0 +1,101 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>YeetCode.TestPipeline</RootNamespace>
+
+    <!-- Paths to test data -->
+    <HalfYeetTestDataDir>$(MSBuildProjectDirectory)\TestData\HalfYeet\</HalfYeetTestDataDir>
+    <FullYeetTestDataDir>$(MSBuildProjectDirectory)\TestData\FullYeet\</FullYeetTestDataDir>
+    <GeneratedOutputDir>$(MSBuildProjectDirectory)\generated\</GeneratedOutputDir>
+
+    <!-- Path to the CLI tool (built from sibling project) -->
+    <YeetCodeCliExePath>$(MSBuildProjectDirectory)\..\YeetCode.CLI\bin\$(Configuration)\net10.0\yeetcode.exe</YeetCodeCliExePath>
+
+    <!-- Path to the MSBuild task DLL (for source-tree dev, override the NuGet default) -->
+    <YeetCodeTaskDir>$(MSBuildProjectDirectory)\..\YeetCode.MSBuild\bin\$(Configuration)\net10.0\</YeetCodeTaskDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\YeetCode.lib\YeetCode\YeetCode.csproj" />
+    <ProjectReference Include="..\YeetCode.CLI\YeetCode.CLI.csproj" />
+    <ProjectReference Include="..\YeetCode.MSBuild\YeetCode.MSBuild.csproj" />
+  </ItemGroup>
+
+  <!-- Copy test data files to output -->
+  <ItemGroup>
+    <None Include="TestData\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Import the .targets file for MSBuild task definitions (source-tree dev path) -->
+  <Import Project="..\YeetCode.MSBuild\build\ArtificialNecessity.YeetCode.MSBuild.targets" />
+
+  <!-- ════════════════════════════════════════════════════════════════
+       MSBuild Task: Half Yeet (HJSON data + template → output)
+       Runs the YeetCodeTemplateTask directly as an in-process MSBuild task
+       Run with: dotnet build /p:RunYeetCodePipeline=true
+       ════════════════════════════════════════════════════════════════ -->
+  <Target Name="RunHalfYeetViaMSBuildTask" AfterTargets="Build"
+          Condition="'$(RunYeetCodePipeline)' == 'true'">
+    <MakeDir Directories="$(GeneratedOutputDir)msbuild-half\" />
+    <YeetCodeTemplateTask
+      DataFile="$(HalfYeetTestDataDir)greeting.ytdata.hjson"
+      TemplateFile="$(HalfYeetTestDataDir)greeting.ytmpl"
+      OutputFile="$(GeneratedOutputDir)msbuild-half\greeting.out" />
+    <Message Importance="High" Text="MSBuild Half-Yeet: generated msbuild-half\greeting.out" />
+  </Target>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       MSBuild Task: Full Yeet (schema + grammar + input + template → output)
+       Runs the YeetCodeGenerateTask directly as an in-process MSBuild task
+       Run with: dotnet build /p:RunYeetCodePipeline=true
+       ════════════════════════════════════════════════════════════════ -->
+  <Target Name="RunFullYeetViaMSBuildTask" AfterTargets="Build"
+          Condition="'$(RunYeetCodePipeline)' == 'true'">
+    <MakeDir Directories="$(GeneratedOutputDir)msbuild-full\" />
+    <YeetCodeGenerateTask
+      SchemaFile="$(FullYeetTestDataDir)simple.ytschema.ytson"
+      GrammarFile="$(FullYeetTestDataDir)simple.ytgmr"
+      InputFile="$(FullYeetTestDataDir)simple.ytinput.proto"
+      TemplateFile="$(FullYeetTestDataDir)simple.ytmpl"
+      OutputFile="$(GeneratedOutputDir)msbuild-full\simple.out" />
+    <Message Importance="High" Text="MSBuild Full-Yeet: generated msbuild-full\simple.out" />
+  </Target>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       Exec: Half Yeet via CLI
+       Runs the yeetcode CLI tool as an external process
+       Run with: dotnet build /p:RunYeetCodePipeline=true
+       ════════════════════════════════════════════════════════════════ -->
+  <Target Name="RunHalfYeetViaExec" AfterTargets="Build"
+          Condition="'$(RunYeetCodePipeline)' == 'true'"
+          DependsOnTargets="RunHalfYeetViaMSBuildTask">
+    <MakeDir Directories="$(GeneratedOutputDir)exec-half\" />
+    <Exec Command="&quot;$(YeetCodeCliExePath)&quot; template --data &quot;$(HalfYeetTestDataDir)greeting.ytdata.hjson&quot; --template &quot;$(HalfYeetTestDataDir)greeting.ytmpl&quot; --output &quot;$(GeneratedOutputDir)exec-half\greeting.out&quot;" />
+    <Message Importance="High" Text="Exec Half-Yeet: generated exec-half\greeting.out" />
+  </Target>
+
+  <!-- ════════════════════════════════════════════════════════════════
+       Exec: Full Yeet via CLI
+       Runs the yeetcode CLI tool as an external process
+       Run with: dotnet build /p:RunYeetCodePipeline=true
+       ════════════════════════════════════════════════════════════════ -->
+  <Target Name="RunFullYeetViaExec" AfterTargets="Build"
+          Condition="'$(RunYeetCodePipeline)' == 'true'"
+          DependsOnTargets="RunFullYeetViaMSBuildTask">
+    <MakeDir Directories="$(GeneratedOutputDir)exec-full\" />
+    <Exec Command="&quot;$(YeetCodeCliExePath)&quot; generate --schema &quot;$(FullYeetTestDataDir)simple.ytschema.ytson&quot; --grammar &quot;$(FullYeetTestDataDir)simple.ytgmr&quot; --input &quot;$(FullYeetTestDataDir)simple.ytinput.proto&quot; --template &quot;$(FullYeetTestDataDir)simple.ytmpl&quot; --output &quot;$(GeneratedOutputDir)exec-full\simple.out&quot;" />
+    <Message Importance="High" Text="Exec Full-Yeet: generated exec-full\simple.out" />
+  </Target>
+
+</Project>

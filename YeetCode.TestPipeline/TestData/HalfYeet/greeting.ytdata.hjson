@@ -1,0 +1,9 @@
+{
+  greeting: Hello
+  name: World
+  items: [
+    { label: Alpha, value: 1 }
+    { label: Beta, value: 2 }
+    { label: Gamma, value: 3 }
+  ]
+}

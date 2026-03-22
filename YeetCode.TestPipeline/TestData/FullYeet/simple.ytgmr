@@ -1,0 +1,17 @@
+# Simple proto-like grammar for testing
+
+file ::= syntax_decl? package_decl? message*
+
+syntax_decl ::= "syntax" "=" syntax:QUOTED_STRING ";"
+
+package_decl ::= "package" package:IDENT ";"
+
+message ::= "message" name:IDENT "{" fields:field* "}"
+
+field ::= type:IDENT name:IDENT "=" tag:INT ";"
+
+IDENT ::= /[a-zA-Z_][a-zA-Z0-9_.]+/
+INT ::= /0|[1-9][0-9]*/
+QUOTED_STRING ::= /"[^"]*"/
+
+%skip ::= /(?:\s|\/\/[^\n]*)*/

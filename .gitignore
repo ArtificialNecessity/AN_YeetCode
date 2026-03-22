@@ -2,6 +2,8 @@
 .reflex/
 .vscode/
 .vs/
+# Build sentinel files
+.version-pack-sentinel
 *.user
 *.suo
 *.userprefs

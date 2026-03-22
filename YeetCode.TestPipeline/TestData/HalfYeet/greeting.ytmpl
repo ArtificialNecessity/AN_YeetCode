@@ -1,0 +1,8 @@
+<?yt delim="<% %>" ?>
+// Auto-generated — do not edit
+<%greeting%>, <%name%>!
+
+Items:
+<%each items as item%>
+  - <%item.label%> = <%item.value%>
+<%/each%>

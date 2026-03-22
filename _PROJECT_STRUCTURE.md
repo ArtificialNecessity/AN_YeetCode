@@ -7,19 +7,31 @@ It parses custom syntax into validated HJSON intermediate representation, then g
 multi-file output through templates with configurable delimiters.
 
 **Implementation Language:** C# / .NET 10
-**Current Scope:** Phases 1-3 (HJSON Parser, Schema, Template, Grammar, CLI — no Parser Generator)
+**Current Scope:** HJSON Parser, Schema, Template, Grammar, CLI, MSBuild Task
 **Test Target:** Protocol Buffers → C#
 
 ## Pipeline
 
 ```
-                    schema.hjson
+                    schema.ytschema.ytson
                    /            \
                   /   validates   \
                  /                 \
-grammar.yeet --> data.hjson --> template.yt --> output files
- (parse)         (validated)     (generate)       (N files)
+grammar.ytgmr --> data.ytdata.hjson --> template.ytmpl --> output files
+ (parse)          (validated)          (generate)          (N files)
 ```
+
+## File Naming Convention
+
+| Role | Extension | Example |
+|------|-----------|---------|
+| Grammar | `.ytgmr` | `proto.ytgmr` |
+| Schema | `.ytschema.ytson` | `proto.ytschema.ytson` |
+| Template | `.ytmpl` | `proto-csharp.ytmpl` |
+| Data | `.ytdata.hjson` | `widgets.ytdata.hjson` |
+| Input | `.ytinput.ext` | `widgets.ytinput.proto` |
+
+The last extension always indicates the file format. The `yt` prefix identifies YeetCode-specific files.
 
 ## Solution Layout
 
@@ -27,18 +39,19 @@ grammar.yeet --> data.hjson --> template.yt --> output files
 AN_YeetCode/
 ├── _PROJECT_STRUCTURE.md              # This file
 ├── _SPECS/                            # Specification documents
-│   ├── 00_YeetCodeSpec.md             # Core spec: schema, grammar, template, CLI
+│   ├── 00_IntroToYeetCode.md          # Introduction and overview
+│   ├── 01_YeetCodeSpec.md             # Core spec: schema, grammar, template, CLI
 │   ├── 05_YeetCode_ParserGenerator.md # Parser generator spec (future)
-│   ├── 20_ProtoBuff_YeetCode.md       # Protobuf example: schema + grammar + template
-│   └── Two_Phase_Parsing_For_AI_Friendly_Diagnostics.md
+│   ├── 20_ProtoBuff_YeetCode.md       # Protobuf example
+│   └── 30_Two_Phase_Parsing_For_AI_Friendly_Diagnostics.md
 │
-├── YeetJson.lib/                      # YeetJson Parser library (formerly HJSONParserForAI)
+├── YeetJson.lib/                      # YeetJson Parser library
 │   ├── YeetJson/
 │   │   ├── Core/
 │   │   │   ├── DataStructures.cs      # Delimiter, Error, Hypothesis, Region records
 │   │   │   ├── StructuralAnalyzer.cs  # Phase 1: bracket/quote matching
 │   │   │   ├── RegionIsolator.cs      # Phase 1.5: healthy vs damaged regions
-│   │   │   ├── HjsonParser.cs         # Phase 2: content parsing (STUB - needs impl)
+│   │   │   ├── HjsonParser.cs         # Phase 2: content parsing → JsonDocument
 │   │   │   └── DiagnosticFormatter.cs # AI-friendly error output
 │   │   ├── HypothesisGenerators/
 │   │   │   ├── UnclosedHypothesisGenerator.cs
@@ -46,209 +59,143 @@ AN_YeetCode/
 │   │   │   └── UnmatchedCloseHypothesisGenerator.cs
 │   │   └── YeetJson.csproj            # net10.0 library
 │   └── YeetJson_Tests/
-│       ├── TestHJsonFiles.cs          # Gold file test runner
-│       └── TestData/                  # Test HJSON files + gold files
+│       ├── SmokeTest.cs               # Key attributes + parsing tests
+│       ├── TestHJsonFiles.cs           # Gold file test runner
+│       └── TestData/                   # Test HJSON files + gold files
 │
-├── YeetCode.lib/                      # Main YeetCode library (structured like HJSONParserForAI.lib)
-│   ├── YeetCode/                      # Library project
-│   │   ├── Core/                      # Shared types, string utils, error types
+├── YeetCode.lib/                      # Main YeetCode library
+│   ├── YeetCode/
+│   │   ├── Core/                      # String case converter, JSON source gen
 │   │   ├── Schema/                    # Schema loading and validation
+│   │   │   ├── SchemaLoader.cs        # Parse .ytson → LoadedSchema
+│   │   │   ├── SchemaTypes.cs         # Type definitions, field types
+│   │   │   └── SchemaValidator.cs     # Validate data, fill defaults
 │   │   ├── Template/                  # Template parsing and evaluation
-│   │   │   ├── StructuralAnalyzer.cs  # Two-phase: delimiter + block matching
-│   │   │   ├── TemplateLexer.cs
-│   │   │   ├── TemplateParser.cs
-│   │   │   ├── TemplateEvaluator.cs
-│   │   │   └── BuiltinFunctions.cs
+│   │   │   ├── TemplateLexer.cs       # Custom delimiter tokenization
+│   │   │   ├── TemplateParser.cs      # Directive → AST
+│   │   │   ├── TemplateEvaluator.cs   # AST → output text
+│   │   │   ├── ExpressionParser.cs    # Path, function, bracket expressions
+│   │   │   └── TemplateTypes.cs       # AST node types
 │   │   ├── Grammar/                   # PEG grammar parsing and interpretation
-│   │   │   ├── StructuralAnalyzer.cs  # Two-phase: delimiter + rule matching
-│   │   │   ├── GrammarLexer.cs
-│   │   │   ├── GrammarParser.cs
-│   │   │   ├── PegInterpreter.cs
-│   │   │   └── Preprocessor.cs
-│   │   └── YeetCode.csproj           # net10.0 library
-│   └── YeetCode_Tests/               # Test project (file-based, like HJSONParserForAI_Tests)
+│   │   │   ├── GrammarLexer.cs        # Tokenize .ytgmr files
+│   │   │   ├── GrammarParser.cs       # Token stream → ParsedGrammar AST
+│   │   │   ├── GrammarTypes.cs        # Grammar AST types
+│   │   │   ├── GrammarPreprocessor.cs # %define, %if/%else/%endif
+│   │   │   └── PegInterpreter.cs      # Execute grammar → JsonDocument
+│   │   ├── Pipeline/                  # Shared pipeline orchestration
+│   │   │   └── YeetCodePipeline.cs    # Generate, Parse, Template, Validate
+│   │   └── YeetCode.csproj            # net10.0 library
+│   └── YeetCode_Tests/                # 50 unit + integration tests
 │       ├── TestSchemaLoader.cs
+│       ├── TestSchemaValidator.cs
 │       ├── TestTemplateEngine.cs
+│       ├── TestGrammarLexer.cs
 │       ├── TestGrammarParser.cs
+│       ├── TestPegInterpreter.cs
+│       ├── TestGrammarPreprocessor.cs
+│       ├── TestGrammarIntegration.cs
 │       └── TestData/
 │
-├── YeetCode.CLI/                      # CLI executable (separate project)
-│   └── YeetCode.CLI.csproj
+├── YeetCode.CLI/                      # CLI executable
+│   ├── Program.cs                     # Command dispatch: generate, parse, template, validate
+│   └── YeetCode.CLI.csproj            # net10.0 exe, PackageId: ArtificialNecessity.YeetCode
 │
-├── examples/                          # Example pipelines
-│   └── protobuf/                      # Protocol Buffers test case
-│       ├── proto.schema.ytson
-│       ├── proto.grammar.yeet
-│       ├── proto-csharp.yt
-│       ├── test_simple.proto          # Simple test input
-│       └── expected/                  # Expected output for verification
+├── YeetCode.MSBuild/                  # MSBuild task DLL (self-contained, out-of-process via TaskHostFactory)
+│   ├── YeetCodeGenerateTask.cs        # Full yeet: grammar + input → template → output
+│   ├── YeetCodeTemplateTask.cs        # Half yeet: data → template → output
+│   ├── YeetCode.MSBuild.csproj        # net10.0 lib, PackageId: ArtificialNecessity.YeetCode.MSBuild
+│   └── build/
+│       └── ArtificialNecessity.YeetCode.MSBuild.targets  # UsingTask + TaskHostFactory
 │
-└── YeetCode.sln                       # Solution file
+├── YeetCode.TestPipeline/             # End-to-end test project
+│   ├── PipelineVerificationTests.cs   # xUnit tests verifying generated output
+│   ├── YeetCode.TestPipeline.csproj   # MSBuild targets + Exec targets for both modes
+│   └── TestData/
+│       ├── HalfYeet/                  # Data + template → output
+│       │   ├── greeting.ytdata.hjson
+│       │   └── greeting.ytmpl
+│       └── FullYeet/                  # Schema + grammar + input + template → output
+│           ├── simple.ytschema.ytson
+│           ├── simple.ytgmr
+│           ├── simple.ytinput.proto
+│           └── simple.ytmpl
+│
+├── version.jsonc                      # Version configuration for git-height versioning
+├── YeetCode.shared.Build.props        # Shared build infrastructure
+├── README.md                          # Project README
+├── README-nuget.md                    # NuGet package README (how-to-use guide)
+├── cmd/
+│   └── publish-local.ps1              # Build + pack + deploy to local NuGet feed
+│
+└── AN_YeetCode.sln                    # Solution file
 ```
 
 ## Project Dependencies
 
 ```mermaid
 graph TD
-    CLI[YeetCode.CLI] --> Schema[YeetCode.Schema]
-    CLI --> Template[YeetCode.Template]
-    CLI --> Grammar[YeetCode.Grammar]
-    Schema --> Core[YeetCode.Core]
-    Template --> Core
-    Template --> Schema
+    CLI[YeetCode.CLI] --> Pipeline[YeetCode.Pipeline]
+    MSBuild[YeetCode.MSBuild] --> Pipeline
+    Pipeline --> Schema[YeetCode.Schema]
+    Pipeline --> Template[YeetCode.Template]
+    Pipeline --> Grammar[YeetCode.Grammar]
+    Schema --> YeetJson[YeetJson]
+    Template --> Core[YeetCode.Core]
     Grammar --> Core
-    Grammar --> Schema
-    Core --> HJSON[YeetJson]
+    Core --> YeetJson
+    TestPipeline[YeetCode.TestPipeline] --> CLI
+    TestPipeline --> MSBuild
 ```
 
-## Component Architecture
+## Two Usage Modes
 
-### 1. YeetJson (formerly HJSONParserForAI)
+### Half Yeet — Data + Template → Output
 
-Two-phase parser with AI-friendly diagnostics:
-- **Phase 1** (DONE): Structural analysis — bracket/quote matching, error detection, repair hypotheses
-- **Phase 1.5** (DONE): Region isolation — healthy vs damaged regions
-- **Phase 2** (STUB): Content parsing — recursive descent HJSON parser producing `JsonDocument`
+The simplest mode. Hand-written HJSON data runs through a template to produce output.
 
-**Output type: `System.Text.Json.JsonDocument`**
-
-The parser converts HJSON into a standard JSON DOM (`JsonDocument`/`JsonElement`).
-This enables automatic deserialization into strongly-typed C# shapes via
-`JsonSerializer.Deserialize<T>()`. The HJSON parser uses `Utf8JsonWriter` internally
-to build valid JSON from HJSON input, then wraps it in `JsonDocument.Parse()`.
-
-Consumer pattern:
-```csharp
-// Parse HJSON → JsonDocument
-var hjsonParser = new HjsonParser();
-var result = hjsonParser.Parse(hjsonContent, structure);
-var jsonDoc = result.ParsedDocument;
-
-// Deserialize into strong C# types
-var protoDefinition = jsonDoc.Deserialize<ProtoDefinition>();
+```
+data.ytdata.hjson → template.ytmpl → output files
 ```
 
-HJSON features to support:
-- Unquoted keys and string values
-- Multiline strings with `"""`
-- Comments: `//`, `/* */`, `#`
-- Trailing commas
-- Optional root braces
+**CLI:** `yeetcode template --data d.hjson --template t.ytmpl --output out.txt`
+**MSBuild:** `<YeetCodeTemplateTask DataFile="..." TemplateFile="..." OutputFile="..." />`
 
-### 2. YeetCode.Core
+### Full Yeet — Grammar + Input → Data → Template → Output
 
-Shared types used across all YeetCode components:
-- `HjsonValue` type hierarchy (or re-export from HJSON parser)
-- Path resolution utilities
-- String case conversion functions (pascal, camel, snake, etc.)
-- Error types and reporting
+The full pipeline. Parses custom syntax, validates against schema, generates output.
 
-### 3. YeetCode.Schema
+```
+grammar.ytgmr + input.proto → data → template.ytmpl → output files
+                                ↑
+                        schema.ytschema.ytson
+```
 
-Schema loading and data validation:
-- Parse `schema.hjson` into a type registry
-- `@Type` definitions with fields, types, defaults, optionality
-- Primitive types: string, int, float, bool
-- Complex types: arrays `[T]`, maps `{T}`, type refs `@TypeName`
-- Freeform objects `{}`
-- Discriminated unions via `kind` field
-- Recursive type support
-- Schema validation: validate HJSON data against schema, fill defaults
+**CLI:** `yeetcode generate --schema s.ytson --grammar g.ytgmr --input i.proto --template t.ytmpl --output out.cs`
+**MSBuild:** `<YeetCodeGenerateTask SchemaFile="..." GrammarFile="..." InputFile="..." TemplateFile="..." OutputFile="..." />`
 
-### 4. YeetCode.Template
+## NuGet Packages
 
-Template parsing and code generation:
-- **Lexer**: Parse `<?yt delim="X Y" ?>` header, tokenize with custom delimiters
-- **Parser**: Build AST from template directives
-- **Evaluator**: Walk AST against validated data to produce output
-- **Directives**: `#each`, `#if`/`#elif`/`#else`, `#define`/`#call`, `#output`
-- **Expressions**: Dot access, bracket access, function calls
-- **Built-ins**: upper, lower, pascal, camel, snake, length, index, first, last
-- **Lookup tables**: Load from functions.hjson, bracket notation access
-- **Multi-file output**: `#output` directive routing to named files
-- **Compile-time validation**: Validate paths against schema, enforce `?.` for optionals
+| Package | Type | Description |
+|---------|------|-------------|
+| `ArtificialNecessity.YeetCode` | dotnet tool | CLI executable (`yeetcode` command) |
+| `ArtificialNecessity.YeetCode.MSBuild` | MSBuild task | Self-contained DLL with TaskHostFactory |
 
-### 5. YeetCode.Grammar
-
-PEG grammar parsing and interpretation:
-- **Lexer**: Tokenize `.yeet` files
-- **Parser**: Parse grammar rules, expressions, captures, type mappings
-- **Preprocessor**: `%define`, `%if`/`%else`/`%endif` resolution
-- **Interpreter**: Execute grammar against input text
-- **PEG expressions**: Sequence, ordered choice, repetition, optional, grouping, named captures
-- **Schema mapping**: `-> @Type`, `-> @Type { kind: @Variant }`, `-> path[]`, `-> path[key]`
-- **Skip patterns**: `%skip` for whitespace/comment handling
-
-### 6. YeetCode.CLI
-
-Command-line interface:
-- `yeetcode generate` — full pipeline: grammar + input → HJSON → template → output
-- `yeetcode parse` — grammar + input → validated HJSON
-- `yeetcode template` — HJSON data → template → output
-- `yeetcode validate` — check HJSON data against schema
-- `yeetcode check` — compile-time template validation against schema
-
-## Implementation Phases
-
-### Phase A: HJSON Parser Completion
-1. Add HJSON value type system
-2. Implement Phase 2 recursive descent parser
-3. Fix multiline string delimiter (''' → """)
-4. Write comprehensive tests
-5. Regenerate gold files
-
-### Phase B: Schema System
-1. Create solution structure
-2. Implement schema loader (parse schema.hjson → type registry)
-3. Implement schema validator (validate data against schema, fill defaults)
-
-### Phase C: Template Engine
-1. Implement template lexer with custom delimiters
-2. Implement template parser (directives → AST)
-3. Implement built-in functions
-4. Implement template evaluator
-5. Implement multi-file output
-6. Implement compile-time validation
-
-### Phase D: Grammar Engine
-1. Implement PEG grammar lexer
-2. Implement PEG grammar parser
-3. Implement grammar preprocessor
-4. Implement PEG interpreter with schema mapping
-
-### Phase E: CLI and Integration
-1. Implement CLI with all commands
-2. Create Protocol Buffer test artifacts (schema, grammar, template, input)
-3. End-to-end testing
+Both packages share the same `YeetCode.lib` library for pipeline logic.
 
 ## Test Strategy
 
-- **HJSON Parser**: Gold file tests (existing pattern) + unit tests for Phase 2
-- **Schema**: Unit tests for type registry building and data validation
-- **Template**: Unit tests for lexer/parser/evaluator + integration tests with example templates
-- **Grammar**: Unit tests for PEG expressions + integration tests with Protocol Buffer grammar
-- **E2E**: Protocol Buffer .proto → .g.cs with expected output comparison
+- **YeetJson**: 4 tests — gold file tests + key attributes + parsing
+- **YeetCode.lib**: 50 tests — schema, template, grammar lexer/parser/interpreter/preprocessor/integration
+- **TestPipeline**: 6 tests — verify MSBuild task and CLI Exec produce identical output for both modes
+- **Total**: 60 tests
 
 ## Key Design Decisions
 
 1. **HJSON as the universal data format** — schema, data, functions all use HJSON
-2. **Two-phase parsing everywhere** — structural analysis separate from content parsing for better errors. Applied to HJSON, .yeet grammars, and .yt templates
-3. **JsonDocument output** — HJSON parser produces `System.Text.Json.JsonDocument`, enabling `JsonSerializer.Deserialize<T>()` into strongly-typed C# shapes
+2. **Two-phase parsing everywhere** — structural analysis separate from content parsing
+3. **JsonDocument output** — HJSON parser produces `System.Text.Json.JsonDocument`
 4. **Schema-first validation** — data validated against schema before template sees it
 5. **Custom delimiters** — template syntax adapts to output language, zero escaping
-6. **Maps over arrays** — named collections use HJSON objects keyed by name
-7. **Discriminated unions via kind field** — `kind: @TypeRef` with optional variant branches
-8. **Compile-time template validation** — catch errors before runtime
-
-## Future Work (not in current scope)
-
-- **YeetJson library** — the HJSON parser library has been renamed from `HJSONParserForAI` to `YeetJson` to reflect its extended capabilities beyond standard HJSON (key attributes, strictness levels, etc.)
-- **Parser strictness levels** — the parser should support configurable strictness modes:
-  - **Strict JSON** — standard JSON only, no extensions
-  - **JSONC** — JSON with comments (`//`, `/* */`)
-  - **HJSON** — full HJSON: unquoted keys/values, trailing commas, multiline strings, comments
-  - **YTSON** — HJSON + key attributes (`key [attr, attr:value]: value`), file extension `.ytson`
-- **Comment preservation** — HJSON comments optionally parsed into preserved elements (e.g., special keys like `//comment_0`, `#comment_1`) that can be iterated like normal keys or ignored via a parse-time setting. This enables comment-aware tooling and round-trip editing.
-- **JSON → HJSON output** — serialize JsonDocument/JsonElement back to human-friendly HJSON format with proper indentation and optional comment reinsertion
-- **Format-preserving HJSON edit interface** — programmatically edit HJSON files while preserving original string formatting, indentation, comments, and whitespace. Round-trip editing without butchering the source. Depends on comment preservation.
-- **Parser Generator** (spec 05) — generate standalone parsers from .yeet grammars for runtime use
+6. **Self-contained MSBuild task** — DLL calls YeetCode.lib directly, runs out-of-process via TaskHostFactory
+7. **CLI + MSBuild parity** — both invoke the same `YeetCodePipeline` orchestrator
+8. **File naming convention** — `.ytgmr`, `.ytmpl`, `.ytschema.ytson`, `.ytdata.hjson`, `.ytinput.ext`
