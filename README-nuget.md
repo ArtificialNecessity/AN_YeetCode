@@ -1,6 +1,7 @@
 # ArtificialNecessity.YeetCode
 
 (C)opyright 2026 by David Jeske <davidj@gmail.com>
+Licensed under Apache 2.0
 
 **Yeets one language into another.** Schema-driven meta-programming for language-to-language transformation.
 
@@ -51,13 +52,13 @@ grammar.ytgmr + input.proto → data.hjson → template.ytmpl → output files
 
 ## File Naming Convention
 
-| Role | Extension | Example |
-|------|-----------|---------|
-| Grammar | `.ytgmr` | `proto.ytgmr` |
-| Schema | `.ytschema.ytson` | `proto.ytschema.ytson` |
-| Template | `.ytmpl` | `proto-csharp.ytmpl` |
-| Data | `.ytdata.hjson` | `widgets.ytdata.hjson` |
-| Input | `.ytinput.ext` | `widgets.ytinput.proto` |
+| Role     | Extension           | Example                   |
+| -------- | ------------------- | ------------------------- |
+| Grammar  | `.ytgmr`          | `proto.ytgmr`           |
+| Schema   | `.ytschema.ytson` | `proto.ytschema.ytson`  |
+| Template | `.ytmpl`          | `proto-csharp.ytmpl`    |
+| Data     | `.ytdata.hjson`   | `widgets.ytdata.hjson`  |
+| Input    | `.ytinput.ext`    | `widgets.ytinput.proto` |
 
 The last extension always indicates the file format. The `yt` prefix identifies YeetCode-specific files. User input files keep their own format extension.
 
@@ -129,27 +130,27 @@ Add the package reference, then use the tasks in your `.csproj`:
 
 **YeetCodeGenerateTask** (full yeet):
 
-| Property | Required | Description |
-|----------|----------|-------------|
-| `SchemaFile` | ✅ | Schema file (.ytschema.ytson) |
-| `GrammarFile` | ✅ | Grammar file (.ytgmr) |
-| `InputFile` | ✅ | Input file to parse |
-| `TemplateFile` | ✅ | Template file (.ytmpl) |
-| `FunctionsFile` | | Lookup tables (.hjson) |
-| `OutputFile` | | Single-file output path |
-| `OutputDirectory` | | Multi-file output directory |
-| `Defines` | | Semicolon-separated grammar parameters |
+| Property            | Required | Description                            |
+| ------------------- | -------- | -------------------------------------- |
+| `SchemaFile`      | ✅       | Schema file (.ytschema.ytson)          |
+| `GrammarFile`     | ✅       | Grammar file (.ytgmr)                  |
+| `InputFile`       | ✅       | Input file to parse                    |
+| `TemplateFile`    | ✅       | Template file (.ytmpl)                 |
+| `FunctionsFile`   |          | Lookup tables (.hjson)                 |
+| `OutputFile`      |          | Single-file output path                |
+| `OutputDirectory` |          | Multi-file output directory            |
+| `Defines`         |          | Semicolon-separated grammar parameters |
 
 **YeetCodeTemplateTask** (half yeet):
 
-| Property | Required | Description |
-|----------|----------|-------------|
-| `DataFile` | ✅ | HJSON data file |
-| `TemplateFile` | ✅ | Template file (.ytmpl) |
-| `SchemaFile` | | Optional schema for validation |
-| `FunctionsFile` | | Lookup tables (.hjson) |
-| `OutputFile` | | Single-file output path |
-| `OutputDirectory` | | Multi-file output directory |
+| Property            | Required | Description                    |
+| ------------------- | -------- | ------------------------------ |
+| `DataFile`        | ✅       | HJSON data file                |
+| `TemplateFile`    | ✅       | Template file (.ytmpl)         |
+| `SchemaFile`      |          | Optional schema for validation |
+| `FunctionsFile`   |          | Lookup tables (.hjson)         |
+| `OutputFile`      |          | Single-file output path        |
+| `OutputDirectory` |          | Multi-file output directory    |
 
 ---
 
@@ -308,17 +309,17 @@ Templates use configurable delimiters declared in the first line:
 
 ### Directives
 
-| Directive | Purpose |
-|-----------|---------|
-| `each collection as item` | Iterate array |
-| `each map as key, value` | Iterate map key-value pairs |
-| `if condition` | Conditional |
-| `elif condition` | Else-if |
-| `else` | Else |
-| `define name(args)` | Define reusable macro |
-| `call name(args)` | Invoke macro |
-| `output filename` | Multi-file output |
-| `/each`, `/if`, `/define`, `/output` | Close blocks |
+| Directive                                    | Purpose                     |
+| -------------------------------------------- | --------------------------- |
+| `each collection as item`                  | Iterate array               |
+| `each map as key, value`                   | Iterate map key-value pairs |
+| `if condition`                             | Conditional                 |
+| `elif condition`                           | Else-if                     |
+| `else`                                     | Else                        |
+| `define name(args)`                        | Define reusable macro       |
+| `call name(args)`                          | Invoke macro                |
+| `output filename`                          | Multi-file output           |
+| `/each`, `/if`, `/define`, `/output` | Close blocks                |
 
 ### Built-in Functions
 

@@ -2,12 +2,21 @@
   "name": "yeetcode-language-support",
   "displayName": "YeetCode Language Support",
   "description": "Syntax highlighting for YeetCode file formats: HJSON, YTSON schemas, YTGMR grammars, and YTMPL templates",
-  "version": "0.1.0",
-  "publisher": "ArtificialNecessity",
-  "license": "MIT",
+  "version": "0.1.6",
+  "publisher": "artificial-necessity",
+  "license": "Apache 2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArtificialNecessity/AN_YeetCode"
+  },
+  "homepage": "https://github.com/ArtificialNecessity/AN_YeetCode",
+  "bugs": {
+    "url": "https://github.com/ArtificialNecessity/AN_YeetCode/issues"
+  },
   "engines": {
     "vscode": "^1.75.0"
   },
+  "icon": "icon.png",
   "categories": [
     "Programming Languages"
   ],
@@ -15,26 +24,49 @@
     "languages": [
       {
         "id": "hjson",
-        "aliases": ["HJSON", "Human JSON"],
-        "extensions": [".hjson"],
+        "aliases": [
+          "HJSON",
+          "Human JSON"
+        ],
+        "extensions": [
+          ".hjson"
+        ],
         "configuration": "./language-configuration/hjson.language-configuration.json"
       },
       {
         "id": "ytson",
-        "aliases": ["YTSON", "YeetCode Schema"],
-        "extensions": [".ytson"],
+        "aliases": [
+          "YTSON",
+          "Yeet JSON",
+          "Yeet JSON"
+        ],
+        "extensions": [
+          ".ytson"
+        ],
         "configuration": "./language-configuration/ytson.language-configuration.json"
       },
       {
         "id": "ytgmr",
-        "aliases": ["YTGMR", "YeetCode Grammar"],
-        "extensions": [".ytgmr", ".yeet"],
+        "aliases": [
+          "YTGMR",
+          "YeetCode Grammar"
+        ],
+        "extensions": [
+          ".ytgmr",
+          ".yeet"
+        ],
         "configuration": "./language-configuration/ytgmr.language-configuration.json"
       },
       {
         "id": "ytmpl",
-        "aliases": ["YTMPL", "YeetCode Template"],
-        "extensions": [".ytmpl", ".yt"],
+        "aliases": [
+          "YTMPL",
+          "YeetCode Template"
+        ],
+        "extensions": [
+          ".ytmpl",
+          ".yt"
+        ],
         "configuration": "./language-configuration/ytmpl.language-configuration.json"
       }
     ],
@@ -60,5 +92,10 @@
         "path": "./syntaxes/ytmpl.tmLanguage.json"
       }
     ]
+  },
+  "scripts": {
+    "bump-version": "node scripts/bump-version.js",
+    "package": "node scripts/bump-version.js && npx @vscode/vsce package",
+    "build": "node scripts/bump-version.js && npx @vscode/vsce package"
   }
 }

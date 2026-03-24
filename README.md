@@ -1,6 +1,7 @@
 # YeetCode & YeetJson
 
 (C)opyright 2026 by David Jeske <davidj@gmail.com>
+Licensed under Apache 2.0
 
 **Yeet one language into another.   -   HJSon and Json Parsing with errors your AI will love as much as you will.**
 

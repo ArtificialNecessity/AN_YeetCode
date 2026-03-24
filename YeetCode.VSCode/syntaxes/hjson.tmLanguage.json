@@ -45,8 +45,8 @@
     "array": {
       "begin": "\\[",
       "end": "\\]",
-      "beginCaptures": { "0": { "name": "punctuation.definition.array.begin.hjson" } },
-      "endCaptures": { "0": { "name": "punctuation.definition.array.end.hjson" } },
+      "beginCaptures": { "0": { "name": "entity.name.type.array-bracket.hjson" } },
+      "endCaptures": { "0": { "name": "entity.name.type.array-bracket.hjson" } },
       "patterns": [
         { "include": "#comments" },
         { "include": "#value" },
@@ -56,7 +56,6 @@
     },
 
     "key-value-pair": {
-      "comment": "Matches: key: value, key [attrs]: value, or \"key\": value",
       "patterns": [
         { "include": "#quoted-key-value-pair" },
         { "include": "#unquoted-key-value-pair" }
@@ -64,11 +63,11 @@
     },
 
     "quoted-key-value-pair": {
-      "comment": "Matches: \"key\": value",
+      "comment": "\"key\": value",
       "begin": "(\"[^\"]*\")(\\s*)(\\:)",
-      "end": "(?=\\s*[,}\\]])|(?=\\s*$)|(?=\\s*[#/])",
+      "end": "(?=[,}\\]])|(?=\\s*$)|(?=\\s*[#/])",
       "beginCaptures": {
-        "1": { "name": "support.type.property-name.hjson" },
+        "1": { "name": "punctuation.definition.tag.hjson" },
         "3": { "name": "punctuation.separator.dictionary.key-value.hjson" }
       },
       "patterns": [
@@ -79,13 +78,13 @@
     },
 
     "unquoted-key-value-pair": {
-      "comment": "Matches: key: value or key [attrs]: value — key is unquoted identifier",
-      "begin": "([a-zA-Z_@][a-zA-Z0-9_.]*)(\\s*(?:\\[[^\\]]*\\])?\\s*)(\\:)",
-      "end": "(?=\\s*[,}\\]])|(?=\\s*$)|(?=\\s*[#/])",
+      "comment": "key: value  or  key [attrs]: value",
+      "begin": "([a-zA-Z_@][a-zA-Z0-9_.]*)(\\s*\\[[^\\]]*\\])?(\\s*)(\\:)",
+      "end": "(?=[,}\\]])|(?=\\s*$)|(?=\\s*[#/])",
       "beginCaptures": {
-        "1": { "name": "support.type.property-name.hjson" },
-        "2": { "name": "entity.other.attribute-name.hjson" },
-        "3": { "name": "punctuation.separator.dictionary.key-value.hjson" }
+        "1": { "name": "punctuation.definition.tag.hjson" },
+        "2": { "name": "comment.block.key-attribute.hjson" },
+        "4": { "name": "punctuation.separator.dictionary.key-value.hjson" }
       },
       "patterns": [
         { "include": "#comments" },
@@ -95,7 +94,6 @@
     },
 
     "value": {
-      "comment": "All value types that can appear after a colon or in an array",
       "patterns": [
         { "include": "#string-multiline" },
         { "include": "#string-double-quoted" },
@@ -134,7 +132,7 @@
     },
 
     "constant": {
-      "name": "constant.language.hjson",
+      "name": "constant.numeric.hjson",
       "match": "\\b(?:true|false|null)\\b"
     },
 
@@ -144,14 +142,14 @@
     },
 
     "unquoted-string-value": {
-      "comment": "Unquoted string value after a colon — matches rest of line that is not a structured value",
-      "name": "string.unquoted.hjson",
-      "match": "(?<=:\\s*)[^\\s{\\[\"'][^,}\\]\\n#/]*[^\\s,}\\]#/]|(?<=:\\s*)[^\\s{\\[\"',}\\]\\n#/]"
+      "comment": "Unquoted string value after colon — rest of content until line end or structural char",
+      "name": "variable.parameter.hjson",
+      "match": "[^\\s{\\[\"'][^\\n}\\]#]*?(?=\\s*[,}\\]]|\\s*$|\\s*[#/])"
     },
 
     "unquoted-array-value": {
-      "comment": "Unquoted string value inside an array — a line that is not a structured value",
-      "name": "string.unquoted.hjson",
+      "comment": "Unquoted string value inside an array",
+      "name": "variable.parameter.hjson",
       "match": "[a-zA-Z_][a-zA-Z0-9_ ]*(?=\\s*$|\\s*[,\\]#/])"
     }
   }

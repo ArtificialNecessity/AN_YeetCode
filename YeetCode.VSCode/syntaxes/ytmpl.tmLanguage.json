@@ -2,11 +2,243 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "YTMPL",
   "scopeName": "source.ytmpl",
-  "comment": "Stub — will be fleshed out in Phase 4.",
   "patterns": [
-    {
-      "name": "meta.preprocessor.ytmpl",
-      "match": "<\\?yt.*?\\?>"
+    { "include": "#yt-processing-block" },
+    { "include": "#delimited-block" }
+  ],
+  "repository": {
+
+    "yt-processing-block": {
+      "comment": "<?yt ... ?> blocks — can contain delim= OR directives",
+      "name": "meta.embedded.block.ytmpl",
+      "begin": "(<\\?yt)\\b",
+      "end": "(\\?>)",
+      "beginCaptures": { "1": { "name": "punctuation.section.embedded.begin.ytmpl" } },
+      "endCaptures": { "1": { "name": "punctuation.section.embedded.end.ytmpl" } },
+      "patterns": [
+        { "include": "#delim-attribute" },
+        { "include": "#directive-content" }
+      ]
+    },
+
+    "delimited-block": {
+      "comment": "<% ... %> template blocks",
+      "name": "meta.embedded.block.ytmpl",
+      "begin": "(<%)",
+      "end": "(%>)",
+      "beginCaptures": { "1": { "name": "punctuation.section.embedded.begin.ytmpl" } },
+      "endCaptures": { "1": { "name": "punctuation.section.embedded.end.ytmpl" } },
+      "patterns": [
+        { "include": "#directive-content" }
+      ]
+    },
+
+    "delim-attribute": {
+      "comment": "delim=\"OPEN CLOSE\" attribute in <?yt ?> header",
+      "match": "(delim)(=)(\"[^\"]*\")",
+      "captures": {
+        "1": { "name": "entity.other.attribute-name.ytmpl" },
+        "2": { "name": "punctuation.separator.key-value.ytmpl" },
+        "3": { "name": "string.quoted.double.ytmpl" }
+      }
+    },
+
+    "directive-content": {
+      "comment": "Shared directive patterns for both <?yt ?> and <% %> blocks",
+      "patterns": [
+        { "include": "#close-directive" },
+        { "include": "#each-directive" },
+        { "include": "#if-elif-directive" },
+        { "include": "#else-directive" },
+        { "include": "#define-directive" },
+        { "include": "#call-directive" },
+        { "include": "#output-directive" },
+        { "include": "#expression-content" }
+      ]
+    },
+
+    "close-directive": {
+      "comment": "/each, /if, /define, /output",
+      "match": "(/(?:each|if|define|output))\\b",
+      "captures": {
+        "1": { "name": "keyword.control.ytmpl" }
+      }
+    },
+
+    "each-directive": {
+      "comment": "each collection as item  OR  each collection as key, value  with optional separator=",
+      "begin": "(each)\\b",
+      "end": "(?=%>|\\?>)",
+      "beginCaptures": { "1": { "name": "keyword.control.ytmpl" } },
+      "patterns": [
+        { "include": "#separator-attribute" },
+        {
+          "comment": "as keyword followed by local variable declarations",
+          "match": "\\b(as)\\s+([a-zA-Z_][a-zA-Z0-9_]*)(?:\\s*,\\s*([a-zA-Z_][a-zA-Z0-9_]*))?",
+          "captures": {
+            "1": { "name": "keyword.operator.word.as.ytmpl" },
+            "2": { "name": "variable.parameter.ytmpl" },
+            "3": { "name": "variable.parameter.ytmpl" }
+          }
+        },
+        { "include": "#source-path" }
+      ]
+    },
+
+    "if-elif-directive": {
+      "comment": "if condition  OR  elif condition",
+      "begin": "((?:el)?if)\\b",
+      "end": "(?=%>|\\?>)",
+      "beginCaptures": { "1": { "name": "keyword.control.ytmpl" } },
+      "patterns": [
+        { "include": "#comparison-operator" },
+        { "include": "#type-reference" },
+        { "include": "#string-literal" },
+        { "include": "#source-path" }
+      ]
+    },
+
+    "else-directive": {
+      "match": "\\b(else)\\b",
+      "captures": { "1": { "name": "keyword.control.ytmpl" } }
+    },
+
+    "define-directive": {
+      "comment": "define name(args)",
+      "begin": "(define)\\b",
+      "end": "(?=%>|\\?>)",
+      "beginCaptures": { "1": { "name": "keyword.control.ytmpl" } },
+      "patterns": [
+        {
+          "match": "([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
+          "captures": { "1": { "name": "entity.name.function.ytmpl" } }
+        },
+        {
+          "match": "([a-zA-Z_][a-zA-Z0-9_]*)",
+          "name": "variable.parameter.ytmpl"
+        },
+        { "include": "#punctuation" }
+      ]
+    },
+
+    "call-directive": {
+      "comment": "call name(args)",
+      "begin": "(call)\\b",
+      "end": "(?=%>|\\?>)",
+      "beginCaptures": { "1": { "name": "keyword.control.ytmpl" } },
+      "patterns": [
+        {
+          "match": "([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(",
+          "captures": { "1": { "name": "entity.name.function.ytmpl" } }
+        },
+        { "include": "#source-path" },
+        { "include": "#punctuation" }
+      ]
+    },
+
+    "output-directive": {
+      "comment": "output filename_expression",
+      "begin": "(output)\\b",
+      "end": "(?=%>|\\?>)",
+      "beginCaptures": { "1": { "name": "keyword.control.ytmpl" } },
+      "patterns": [
+        { "include": "#builtin-function" },
+        { "include": "#string-literal" },
+        { "include": "#concat-operator" },
+        { "include": "#source-path" },
+        { "include": "#punctuation" }
+      ]
+    },
+
+    "expression-content": {
+      "comment": "Standalone value expressions: paths, functions, bracket access",
+      "patterns": [
+        { "include": "#builtin-function" },
+        { "include": "#comparison-operator" },
+        { "include": "#type-reference" },
+        { "include": "#string-literal" },
+        { "include": "#concat-operator" },
+        { "include": "#optional-access" },
+        { "include": "#bracket-access" },
+        { "include": "#source-path" },
+        { "include": "#punctuation" }
+      ]
+    },
+
+    "source-path": {
+      "comment": "Dot-separated path: items, msg.name, msg.fields.length",
+      "match": "[a-zA-Z_][a-zA-Z0-9_]*(?:\\.[a-zA-Z_][a-zA-Z0-9_]*)*",
+      "name": "entity.name.type.ytmpl"
+    },
+
+    "builtin-function": {
+      "comment": "Built-in functions: pascal, camel, snake, upper, lower, length",
+      "match": "\\b(pascal|camel|snake|upper|lower|length|index|first|last)\\b(?=\\s+|\\()",
+      "captures": { "1": { "name": "support.function.ytmpl" } }
+    },
+
+    "type-reference": {
+      "comment": "@TypeName references in comparisons",
+      "match": "@[a-zA-Z_][a-zA-Z0-9_]*",
+      "name": "entity.name.class.ytmpl"
+    },
+
+    "string-literal": {
+      "name": "string.quoted.double.ytmpl",
+      "begin": "\"",
+      "end": "\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.ytmpl" } },
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.ytmpl" } },
+      "patterns": [
+        {
+          "name": "constant.character.escape.ytmpl",
+          "match": "\\\\."
+        }
+      ]
+    },
+
+    "comparison-operator": {
+      "match": "==|!=",
+      "name": "keyword.operator.comparison.ytmpl"
+    },
+
+    "concat-operator": {
+      "match": "\\+",
+      "name": "keyword.operator.arithmetic.ytmpl"
+    },
+
+    "optional-access": {
+      "match": "\\?\\.",
+      "name": "keyword.operator.optional.ytmpl"
+    },
+
+    "bracket-access": {
+      "comment": "Dynamic bracket access: map[key.path]",
+      "begin": "\\[",
+      "end": "\\]",
+      "beginCaptures": { "0": { "name": "punctuation.section.brackets.begin.ytmpl" } },
+      "endCaptures": { "0": { "name": "punctuation.section.brackets.end.ytmpl" } },
+      "patterns": [
+        { "include": "#source-path" }
+      ]
+    },
+
+    "separator-attribute": {
+      "comment": "separator=\"...\" attribute on each",
+      "match": "(separator)(=)(\"[^\"]*\")",
+      "captures": {
+        "1": { "name": "entity.other.attribute-name.ytmpl" },
+        "2": { "name": "punctuation.separator.key-value.ytmpl" },
+        "3": { "name": "string.quoted.double.ytmpl" }
+      }
+    },
+
+    "punctuation": {
+      "patterns": [
+        { "match": "\\(", "name": "punctuation.section.parens.begin.ytmpl" },
+        { "match": "\\)", "name": "punctuation.section.parens.end.ytmpl" },
+        { "match": ",", "name": "punctuation.separator.comma.ytmpl" }
+      ]
     }
-  ]
+  }
 }

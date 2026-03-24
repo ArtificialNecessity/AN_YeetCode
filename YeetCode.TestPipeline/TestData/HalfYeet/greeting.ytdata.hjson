@@ -2,7 +2,7 @@
   greeting: Hello
   name: World
   items: [
-    { label: Alpha, value: 1 }
+    { label: Alpha, value: 1 , some: "foo" }
     { label: Beta, value: 2 }
     { label: Gamma, value: 3 }
   ]

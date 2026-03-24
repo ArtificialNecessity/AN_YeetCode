@@ -2,3 +2,5 @@
 .gitignore
 **/*.ts
 **/tsconfig.json
+scripts/**
+*.vsix

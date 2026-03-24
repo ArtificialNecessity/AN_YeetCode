@@ -45,6 +45,9 @@ if (-not $Prerelease) {
     Write-Host "Version: $baseVersion.$newBuildOffset (buildNumberOffset incremented)" -ForegroundColor Yellow
 }
 
+# Capture timestamp before build/pack so we can identify newly deployed packages
+$deployStartTime = Get-Date
+
 # Build the solution
 Write-Host "`n[1/5] Building solution..." -ForegroundColor Green
 dotnet build "$repoRoot\AN_YeetCode.sln" -c $configuration $prereleaseFlag
@@ -69,9 +72,16 @@ Write-Host "`n[5/5] Packing MSBuild task..." -ForegroundColor Green
 dotnet pack "$repoRoot\YeetCode.MSBuild\YeetCode.MSBuild.csproj" -c $configuration $prereleaseFlag
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# Show deployed packages
-Write-Host "`nDeployed packages:" -ForegroundColor Cyan
-Get-ChildItem "$env:LOCAL_NUGET_REPO\ArtificialNecessity.Yeet*" -ErrorAction SilentlyContinue |
-    Sort-Object LastWriteTime -Descending |
-    Select-Object -First 8 |
-    ForEach-Object { Write-Host "  $($_.FullName)" -ForegroundColor Green }
+# Show only packages deployed during this run (modified after $deployStartTime)
+$deployedPackages = Get-ChildItem "$env:LOCAL_NUGET_REPO\*.nupkg" -ErrorAction SilentlyContinue |
+    Where-Object { $_.LastWriteTime -ge $deployStartTime } |
+    Sort-Object Name
+if ($deployedPackages) {
+    Write-Host "`nDeployed packages:" -ForegroundColor Cyan
+    foreach ($deployedPackage in $deployedPackages) {
+        $sizeKB = [math]::Round($deployedPackage.Length / 1024, 1)
+        Write-Host "  $($deployedPackage.Name)  (${sizeKB} KB)" -ForegroundColor Green
+    }
+} else {
+    Write-Host "`nWARNING: No packages were deployed to $env:LOCAL_NUGET_REPO" -ForegroundColor Yellow
+}

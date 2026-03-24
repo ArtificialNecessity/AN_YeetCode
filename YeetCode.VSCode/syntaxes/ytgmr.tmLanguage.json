@@ -2,11 +2,148 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "YTGMR",
   "scopeName": "source.ytgmr",
-  "comment": "Stub — will be fleshed out in Phase 3.",
   "patterns": [
-    {
-      "name": "comment.line.number-sign.ytgmr",
-      "match": "#[^\\n]*"
+    { "include": "#comments" },
+    { "include": "#directive" },
+    { "include": "#rule-definition" },
+    { "include": "#token-definition" },
+    { "include": "#regex-pattern" },
+    { "include": "#string-literal" },
+    { "include": "#definition-operator" },
+    { "include": "#named-capture" },
+    { "include": "#peg-operator" },
+    { "include": "#arrow-operator" },
+    { "include": "#type-reference" },
+    { "include": "#token-reference" },
+    { "include": "#rule-reference" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.ytgmr",
+          "match": "#[^\\n]*"
+        },
+        {
+          "name": "comment.line.double-slash.ytgmr",
+          "match": "//[^\\n]*"
+        },
+        {
+          "name": "comment.block.ytgmr",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+
+    "definition-operator": {
+      "name": "keyword.operator.definition.ytgmr",
+      "match": "::="
+    },
+
+    "directive": {
+      "comment": "%skip, %define, %if, %else, %endif, %parse_file",
+      "match": "(%(?:skip|define|if|else|endif|parse_file))\\b",
+      "captures": {
+        "1": { "name": "keyword.control.directive.ytgmr" }
+      }
+    },
+
+    "regex-pattern": {
+      "comment": "/regex/ with optional flags — the key visual element",
+      "name": "entity.name.type.regex.ytgmr",
+      "begin": "/",
+      "end": "/([a-zA-Z]*)?",
+      "endCaptures": {
+        "1": { "name": "keyword.other.regex-flags.ytgmr" }
+      },
+      "patterns": [
+        {
+          "name": "constant.character.escape.ytgmr",
+          "match": "\\\\."
+        }
+      ]
+    },
+
+    "string-literal": {
+      "name": "string.quoted.double.ytgmr",
+      "begin": "\"",
+      "end": "\"",
+      "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.ytgmr" } },
+      "endCaptures": { "0": { "name": "punctuation.definition.string.end.ytgmr" } },
+      "patterns": [
+        {
+          "name": "constant.character.escape.ytgmr",
+          "match": "\\\\."
+        }
+      ]
+    },
+
+    "named-capture": {
+      "comment": "name:EXPR — the capture label before the colon",
+      "match": "([a-zA-Z_][a-zA-Z0-9_]*)(:)(?=[a-zA-Z])",
+      "captures": {
+        "1": { "name": "variable.parameter.capture.ytgmr" },
+        "2": { "name": "punctuation.separator.capture.ytgmr" }
+      }
+    },
+
+    "arrow-operator": {
+      "name": "keyword.operator.arrow.ytgmr",
+      "match": "->"
+    },
+
+    "type-reference": {
+      "comment": "@TypeName references in schema mappings",
+      "name": "entity.name.class.ytgmr",
+      "match": "@[a-zA-Z_][a-zA-Z0-9_]*"
+    },
+
+    "peg-operator": {
+      "name": "keyword.operator.peg.ytgmr",
+      "match": "[*+?|]"
+    },
+
+    "token-reference": {
+      "comment": "UPPERCASE token names: IDENT, INT, QUOTED_STRING",
+      "name": "entity.name.class.token.ytgmr",
+      "match": "\\b[A-Z][A-Z0-9_]+\\b"
+    },
+
+    "rule-reference": {
+      "comment": "lowercase rule names: file, message, field",
+      "name": "variable.other.rule.ytgmr",
+      "match": "\\b[a-z][a-z0-9_]*\\b"
+    },
+
+    "rule-definition": {
+      "comment": "Rule name at start of line before ::=",
+      "match": "^([a-z][a-z0-9_]*)(?=\\s*::=)",
+      "captures": {
+        "1": { "name": "entity.name.function.rule.ytgmr" }
+      }
+    },
+
+    "token-definition": {
+      "comment": "Token name at start of line before ::=",
+      "match": "^([A-Z][A-Z0-9_]+)(?=\\s*::=)",
+      "captures": {
+        "1": { "name": "entity.name.class.token-definition.ytgmr" }
+      }
+    },
+
+    "punctuation": {
+      "patterns": [
+        { "match": "\\(", "name": "punctuation.section.parens.begin.ytgmr" },
+        { "match": "\\)", "name": "punctuation.section.parens.end.ytgmr" },
+        { "match": "\\{", "name": "punctuation.definition.dictionary.begin.ytgmr" },
+        { "match": "\\}", "name": "punctuation.definition.dictionary.end.ytgmr" },
+        { "match": "\\[", "name": "punctuation.section.brackets.begin.ytgmr" },
+        { "match": "\\]", "name": "punctuation.section.brackets.end.ytgmr" },
+        { "match": ",", "name": "punctuation.separator.comma.ytgmr" }
+      ]
     }
-  ]
+  }
 }
