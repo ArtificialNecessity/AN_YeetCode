@@ -73,6 +73,7 @@ See [**Intro to YeetCode**](_SPECS/IntroToYeetCode.md) for a complete walkthroug
 ## Project Structure
 
 - **[YeetJson.lib/](YeetJson.lib/)** — Two-phase JSON/HJSON/YTSON parser with AI-friendly error diagnostics. Supports JSON, JSONC, HJSON, and YTSON (HJSON + key attributes). Provides exceptionally clear, actionable error messages with ranked repair suggestions. See [YeetJson README](YeetJson.lib/README.md) for details.
+- **[YeetCode.VSCode/](YeetCode.VSCode/)** — VSCode extension providing syntax highlighting for all YeetCode file formats (HJSON, YTSON, YTGMR, YTMPL). See [VSCode Extension README](YeetCode.VSCode/README.md) for details and screenshots.
 - **YeetCode.lib/** — Core YeetCode implementation
   - `Schema/` — Schema loading and validation
   - `Template/` — Template engine with custom delimiters

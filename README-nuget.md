@@ -21,6 +21,10 @@ YeetCode parses any custom syntax into validated HJSON intermediate data, then g
 dotnet tool install -g ArtificialNecessity.YeetCode
 ```
 
+### VSCode Extension
+
+Syntax highlighting for all YeetCode file formats (HJSON, YTSON, YTGMR, YTMPL) is available as a VSCode extension. See the [VSCode Extension README](https://github.com/ArtificialNecessity/AN_YeetCode/blob/main/YeetCode.VSCode/README.md) for details and screenshots.
+
 ---
 
 ## Two Ways to Use YeetCode

@@ -2,7 +2,7 @@
   "name": "yeetcode-language-support",
   "displayName": "YeetCode Language Support",
   "description": "Syntax highlighting for YeetCode file formats: HJSON, YTSON schemas, YTGMR grammars, and YTMPL templates",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "publisher": "artificial-necessity",
   "license": "Apache 2.0",
   "repository": {
