@@ -1,0 +1,24 @@
+{
+  # Demonstrates all YTSON key attribute features
+
+  @DatabaseConnection: {
+    host: string
+    port [default:5432]: int
+    database: string
+    username [optional]: string
+    password [optional]: string
+    ssl_enabled [default:true]: bool
+    connection_timeout [default:30]: int
+    pool_size [default:10]: int
+    description [optional, default:"No description provided"]: string
+  }
+
+  app_name: string
+  version [default:1.0.0]: string
+  environment [default:production]: string
+  debug_mode [default:false]: bool
+  log_level [default:info]: string
+  connections: [@DatabaseConnection]
+  tags [optional]: [string]
+  metadata [optional]: {}
+}

@@ -78,13 +78,12 @@
     },
 
     "unquoted-key-value-pair": {
-      "comment": "key: value  or  key [attrs]: value",
-      "begin": "([a-zA-Z_@][a-zA-Z0-9_.]*)(\\s*\\[[^\\]]*\\])?(\\s*)(\\:)",
+      "comment": "key: value — unquoted key followed by colon",
+      "begin": "([a-zA-Z_@][a-zA-Z0-9_.]*)(\\s*)(\\:)",
       "end": "(?=[,}\\]])|(?=\\s*$)|(?=\\s*[#/])",
       "beginCaptures": {
         "1": { "name": "punctuation.definition.tag.hjson" },
-        "2": { "name": "comment.block.key-attribute.hjson" },
-        "4": { "name": "punctuation.separator.dictionary.key-value.hjson" }
+        "3": { "name": "punctuation.separator.dictionary.key-value.hjson" }
       },
       "patterns": [
         { "include": "#comments" },

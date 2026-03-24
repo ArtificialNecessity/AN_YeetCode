@@ -1,0 +1,19 @@
+{
+  # Minimal config — relies on schema defaults for most fields
+  app_name: MyApp
+  connections: [
+    {
+      host: db.example.com
+      database: myapp_prod
+      # port, ssl_enabled, connection_timeout, pool_size all use defaults
+      # username, password are optional — omitted
+    }
+    {
+      host: cache.example.com
+      port: 6379
+      database: myapp_cache
+      ssl_enabled: false
+      description: Redis cache connection
+    }
+  ]
+}

@@ -2,8 +2,218 @@
   "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
   "name": "YTSON",
   "scopeName": "source.ytson",
-  "comment": "Stub — will be fleshed out in Phase 2. For now, reuses HJSON patterns.",
+  "comment": "YTSON — HJSON with key attributes, @Type definitions, and schema type values",
   "patterns": [
-    { "include": "source.hjson" }
-  ]
+    { "include": "#comments" },
+    { "include": "#object" },
+    { "include": "#array" },
+    { "include": "#value" }
+  ],
+  "repository": {
+
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.number-sign.ytson", "match": "#[^\\n]*" },
+        { "name": "comment.line.double-slash.ytson", "match": "//[^\\n]*" },
+        { "name": "comment.block.ytson", "begin": "/\\*", "end": "\\*/" }
+      ]
+    },
+
+    "object": {
+      "begin": "\\{",
+      "end": "\\}",
+      "beginCaptures": { "0": { "name": "punctuation.definition.dictionary.begin.ytson" } },
+      "endCaptures": { "0": { "name": "punctuation.definition.dictionary.end.ytson" } },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#key-value-pair" },
+        { "include": "#comma" }
+      ]
+    },
+
+    "array": {
+      "begin": "\\[",
+      "end": "\\]",
+      "beginCaptures": { "0": { "name": "entity.name.type.array-bracket.ytson" } },
+      "endCaptures": { "0": { "name": "entity.name.type.array-bracket.ytson" } },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#value" },
+        { "include": "#comma" }
+      ]
+    },
+
+    "key-value-pair": {
+      "patterns": [
+        { "include": "#type-definition-key" },
+        { "include": "#anonymous-map-entry-key" },
+        { "include": "#attributed-key-value-pair" },
+        { "include": "#simple-key-value-pair" }
+      ]
+    },
+
+    "type-definition-key": {
+      "comment": "@TypeName: { ... } — type definition",
+      "begin": "(@[a-zA-Z_][a-zA-Z0-9_]*)(\\s*)(\\:)",
+      "end": "(?=[,}\\]])|(?=\\s*$)|(?=\\s*[#/])",
+      "beginCaptures": {
+        "1": { "name": "entity.name.class.type-definition.ytson" },
+        "3": { "name": "punctuation.separator.dictionary.key-value.ytson" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#value" }
+      ]
+    },
+
+    "anonymous-map-entry-key": {
+      "comment": "@: value — anonymous map entry type marker",
+      "begin": "(@)(\\s*)(\\:)",
+      "end": "(?=[,}\\]])|(?=\\s*$)|(?=\\s*[#/])",
+      "beginCaptures": {
+        "1": { "name": "entity.name.class.anonymous-entry.ytson" },
+        "3": { "name": "punctuation.separator.dictionary.key-value.ytson" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#value" },
+        { "include": "#type-reference-value" }
+      ]
+    },
+
+    "attributed-key-value-pair": {
+      "comment": "key [attr, attr:value]: type — key with attributes",
+      "begin": "([a-zA-Z_][a-zA-Z0-9_]*)(\\s*)(\\[)",
+      "end": "(?=[,}])|(?=\\s*$)|(?=\\s*[#/])",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.ytson" },
+        "2": { "name": "meta.whitespace.ytson" },
+        "3": { "name": "punctuation.section.attributes.begin.ytson" }
+      },
+      "patterns": [
+        { "include": "#attribute-contents" },
+        { "include": "#after-attributes" }
+      ]
+    },
+
+    "attribute-contents": {
+      "comment": "Contents inside [...] attribute brackets",
+      "begin": "(?<=\\[)",
+      "end": "(\\])",
+      "endCaptures": {
+        "1": { "name": "punctuation.section.attributes.end.ytson" }
+      },
+      "patterns": [
+        {
+          "comment": "Attribute with quoted value: default:\"text\"",
+          "match": "([a-zA-Z_][a-zA-Z0-9_]*)(\\:)(\"[^\"]*\")",
+          "captures": {
+            "1": { "name": "storage.modifier.attribute-name.ytson" },
+            "2": { "name": "punctuation.separator.attribute.ytson" },
+            "3": { "name": "string.quoted.double.ytson" }
+          }
+        },
+        {
+          "comment": "Attribute with unquoted value: default:5432",
+          "match": "([a-zA-Z_][a-zA-Z0-9_]*)(\\:)([^,\\]\"]+)",
+          "captures": {
+            "1": { "name": "storage.modifier.attribute-name.ytson" },
+            "2": { "name": "punctuation.separator.attribute.ytson" },
+            "3": { "name": "entity.name.type.attribute-value.ytson" }
+          }
+        },
+        {
+          "comment": "Bare attribute: optional",
+          "match": "[a-zA-Z_][a-zA-Z0-9_]*",
+          "name": "storage.modifier.attribute-name.ytson"
+        },
+        {
+          "name": "punctuation.separator.comma.ytson",
+          "match": ","
+        }
+      ]
+    },
+
+    "after-attributes": {
+      "comment": "The colon and value after the ] closing bracket",
+      "begin": "(?<=\\])(\\s*)(\\:)",
+      "end": "(?=[,}\\]])|(?=\\s*$)|(?=\\s*[#/])",
+      "beginCaptures": {
+        "2": { "name": "punctuation.separator.dictionary.key-value.ytson" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#value" }
+      ]
+    },
+
+    "simple-key-value-pair": {
+      "comment": "key: value — no attributes",
+      "begin": "([a-zA-Z_][a-zA-Z0-9_]*)(\\s*)(\\:)",
+      "end": "(?=[,}\\]])|(?=\\s*$)|(?=\\s*[#/])",
+      "beginCaptures": {
+        "1": { "name": "punctuation.definition.tag.ytson" },
+        "3": { "name": "punctuation.separator.dictionary.key-value.ytson" }
+      },
+      "patterns": [
+        { "include": "#comments" },
+        { "include": "#value" }
+      ]
+    },
+
+    "value": {
+      "patterns": [
+        { "include": "#string-multiline" },
+        { "include": "#string-double-quoted" },
+        { "include": "#type-reference-value" },
+        { "include": "#schema-type-keyword" },
+        { "include": "#constant" },
+        { "include": "#number" },
+        { "include": "#object" },
+        { "include": "#array" }
+      ]
+    },
+
+    "type-reference-value": {
+      "comment": "@TypeName references in values",
+      "name": "entity.name.class.type-reference.ytson",
+      "match": "@[a-zA-Z_][a-zA-Z0-9_]*"
+    },
+
+    "schema-type-keyword": {
+      "comment": "Primitive type keywords used as values: string, int, float, bool",
+      "name": "storage.type.primitive.ytson",
+      "match": "\\b(?:string|int|float|bool)\\b"
+    },
+
+    "string-double-quoted": {
+      "name": "string.quoted.double.ytson",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        { "name": "constant.character.escape.ytson", "match": "\\\\." }
+      ]
+    },
+
+    "string-multiline": {
+      "name": "string.quoted.multiline.ytson",
+      "begin": "'''",
+      "end": "'''"
+    },
+
+    "number": {
+      "name": "constant.numeric.ytson",
+      "match": "-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?(?=\\s*[,}\\]#/\\n]|\\s*$)"
+    },
+
+    "constant": {
+      "name": "constant.numeric.ytson",
+      "match": "\\b(?:true|false|null)\\b"
+    },
+
+    "comma": {
+      "name": "punctuation.separator.comma.ytson",
+      "match": ","
+    }
+  }
 }

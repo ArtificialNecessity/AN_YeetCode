@@ -13,6 +13,19 @@ public class TestSchemaLoader
         return Path.Combine("TestData", fileName);
     }
 
+    private static string GetPipelineTestDataPath(string relativePath)
+    {
+        // Walk up from bin/Debug/net10.0 to find the solution root, then into TestPipeline
+        string? searchDirectory = AppContext.BaseDirectory;
+        while (searchDirectory != null) {
+            string candidatePath = Path.Combine(searchDirectory, "YeetCode.TestPipeline", "TestData", relativePath);
+            if (File.Exists(candidatePath)) return candidatePath;
+            searchDirectory = Path.GetDirectoryName(searchDirectory);
+        }
+        // Fallback: relative from bin output
+        return Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "YeetCode.TestPipeline", "TestData", relativePath);
+    }
+
     [Fact]
     public void TestLoadProtoSchema()
     {
