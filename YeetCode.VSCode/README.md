@@ -15,19 +15,19 @@ Syntax highlighting for YeetCode file formats.
 
 ### HJSON Data Files
 
-![HJSON syntax highlighting](https://raw.githubusercontent.com/ArtificialNecessity/AN_YeetCode/main/YeetCode.VSCode/screenshots/hjson.png)
+![HJSON syntax highlighting](https://raw.githubusercontent.com/ArtificialNecessity/AN_YeetCode/refs/heads/main/YeetCode.VSCode/screenshots/hjson.png)
 
 ### YTSON Schema Files
 
-![YTSON syntax highlighting](https://raw.githubusercontent.com/ArtificialNecessity/AN_YeetCode/main/YeetCode.VSCode/screenshots/ytson.png)
+![YTSON syntax highlighting](https://raw.githubusercontent.com/ArtificialNecessity/AN_YeetCode/refs/heads/main/YeetCode.VSCode/screenshots/ytson.png)
 
 ### YTGMR Grammar Files
 
-![YTGMR syntax highlighting](https://raw.githubusercontent.com/ArtificialNecessity/AN_YeetCode/main/YeetCode.VSCode/screenshots/ytgmr.png)
+![YTGMR syntax highlighting](https://raw.githubusercontent.com/ArtificialNecessity/AN_YeetCode/refs/heads/main/YeetCode.VSCode/screenshots/ytgmr.png)
 
 ### YTMPL Template Files
 
-![YTMPL syntax highlighting](https://raw.githubusercontent.com/ArtificialNecessity/AN_YeetCode/main/YeetCode.VSCode/screenshots/ytmpl.png)
+![YTMPL syntax highlighting](https://raw.githubusercontent.com/ArtificialNecessity/AN_YeetCode/refs/heads/main/YeetCode.VSCode/screenshots/ytmpl.png)
 
 ## Color Philosophy
 
