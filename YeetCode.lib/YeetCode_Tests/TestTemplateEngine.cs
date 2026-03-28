@@ -270,4 +270,35 @@ public class TestTemplateEngine
 
     Assert.Equal("Before\nAfter\n", output);
   }
+
+  [Fact]
+  public void TestTrimlinesFalseDisablesStandaloneDirectiveTrimming()
+  {
+    string dataHjsonText = """
+        {
+          items: [
+            { name: alpha }
+            { name: beta }
+          ]
+        }
+        """;
+    var dataDocument = ParseHjson(dataHjsonText);
+
+    // trimlines=false should preserve the blank lines from directives
+    string templateText = "<?yt delim=\"<% %>\" trimlines=false ?>\n" +
+        "Header\n" +
+        "<% each items as item %>\n" +
+        "- <% item.name %>\n" +
+        "<% /each %>\n" +
+        "Footer\n";
+
+    var templateParser = new TemplateParser();
+    var templateAst = templateParser.Parse(templateText);
+    var evaluator = new TemplateEvaluator(dataDocument);
+    string output = evaluator.Evaluate(templateAst);
+
+    // With trimlines=false, the directive lines produce blank lines
+    Assert.Contains("Header\n\n", output);  // blank line from <% each %>
+    Assert.Contains("\nFooter", output);
+  }
 }

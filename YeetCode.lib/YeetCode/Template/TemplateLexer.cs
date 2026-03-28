@@ -33,6 +33,11 @@ public class TemplateLexer
 {
     public string OpenDelimiter { get; private set; } = "";
     public string CloseDelimiter { get; private set; } = "";
+    /// <summary>
+    /// Whether standalone directive lines are trimmed (default: true).
+    /// Set to false with: <?yt delim="<% %>" trimlines=false ?>
+    /// </summary>
+    public bool TrimDirectiveLines { get; private set; } = true;
 
     /// <summary>
     /// Lex a template string into tokens.
@@ -103,6 +108,20 @@ public class TemplateLexer
 
         OpenDelimiter = delimParts[0];
         CloseDelimiter = delimParts[1];
+
+        // Parse optional trimlines=true|false (default: true)
+        const string trimlinesPrefix = "trimlines=";
+        int trimlinesIndex = headerContent.IndexOf(trimlinesPrefix, StringComparison.Ordinal);
+        if (trimlinesIndex >= 0)
+        {
+            string trimlinesValue = headerContent[(trimlinesIndex + trimlinesPrefix.Length)..].Trim();
+            // Take just the first word (in case there are more attributes after)
+            int trimlinesEndIndex = trimlinesValue.IndexOfAny([' ', '\t', '\r', '\n']);
+            if (trimlinesEndIndex >= 0)
+                trimlinesValue = trimlinesValue[..trimlinesEndIndex];
+
+            TrimDirectiveLines = trimlinesValue.Equals("true", StringComparison.OrdinalIgnoreCase);
+        }
 
         // Skip past ?> and any trailing newline
         int bodyStartPosition = headerCloseIndex + 2;
@@ -192,7 +211,7 @@ public class TemplateLexer
             UpdateLineColumn(templateSource[blockContentStart..currentPosition], ref currentLine, ref currentColumn);
         }
 
-        return TrimStandaloneDirectiveLines(tokens);
+        return TrimDirectiveLines ? TrimStandaloneDirectiveLines(tokens) : tokens;
     }
 
     /// <summary>
