@@ -43,9 +43,16 @@
       }
     },
 
+    "comment-block": {
+      "comment": "# comment inside delimited block: <% # this is a comment %>",
+      "match": "#.*",
+      "name": "comment.line.number-sign.ytmpl"
+    },
+
     "directive-content": {
       "comment": "Shared directive patterns for both <?yt ?> and <% %> blocks",
       "patterns": [
+        { "include": "#comment-block" },
         { "include": "#close-directive" },
         { "include": "#each-directive" },
         { "include": "#if-elif-directive" },

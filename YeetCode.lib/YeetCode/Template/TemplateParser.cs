@@ -47,6 +47,12 @@ public class TemplateParser
             // DelimitedBlock — check if it's a directive or value expression
             string blockContent = currentToken.Content;
 
+            // Comment block: <% # comment text %> — skip silently
+            if (blockContent.StartsWith('#')) {
+                _tokenIndex++;
+                continue;
+            }
+
             if (ExpressionParser.IsDirective(blockContent)) {
                 string directiveKeyword = ExpressionParser.GetDirectiveKeyword(blockContent);
 
