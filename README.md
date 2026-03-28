@@ -56,6 +56,8 @@ public class Widget
 - **Human-readable intermediate** — HJSON output is inspectable, editable, diffable
 - **Multi-file output** — one template generates N files with custom delimiters
 - **Zero escaping** — pick delimiters that don't collide with your output language
+- **Template comments** — `<% # comment %>` for annotations that don't appear in output
+- **Smart line trimming** — standalone directive lines don't leave blank lines in output (configurable via `trimlines=false`)
 - **Recursive types** — discriminated unions and tree structures are first-class
 - **PEG grammars** — deterministic parsing with ordered choice, no ambiguity
 

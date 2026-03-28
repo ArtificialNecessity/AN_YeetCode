@@ -305,16 +305,62 @@ yeetcode generate \
 
 ## Template Syntax
 
-Templates use configurable delimiters declared in the first line:
+Templates use configurable delimiters declared in the header:
 
 ```
 <?yt delim="<% %>" ?>
 ```
 
+### Header Options
+
+| Option                | Default | Description                                                    |
+| --------------------- | ------- | -------------------------------------------------------------- |
+| `delim="OPEN CLOSE"` | —       | **Required.** Delimiter pair for template blocks               |
+| `trimlines=false`     | `true`  | Disable standalone directive line trimming (see below)         |
+
+Example with trimlines disabled:
+```
+<?yt delim="<% %>" trimlines=false ?>
+```
+
+### Comments
+
+Use `#` inside a delimited block to write a comment that produces no output:
+
+```
+<% # This is a YeetCode template comment — it won't appear in output %>
+```
+
+When a comment is the only thing on a line, the entire line (including its newline) is removed from output, so comments don't leave blank lines.
+
+### Standalone Directive Line Trimming
+
+By default, when a control directive (`each`, `if`, `else`, `/each`, `/if`, `define`, `call`, `output`, `# comment`, etc.) is the **only thing on a line** (besides whitespace), the entire line including its newline is removed from output. This prevents blank lines from control-flow directives.
+
+**With trimming (default):**
+```
+<?yt delim="<% %>" ?>
+Header
+<% each items as item %>
+- <% item.name %>
+<% /each %>
+Footer
+```
+Output: `Header\n- alpha\n- beta\nFooter\n` — no blank lines from `each`/`/each`.
+
+**Without trimming:**
+```
+<?yt delim="<% %>" trimlines=false ?>
+```
+Output preserves the blank lines where directives were.
+
+Value expressions like `<% name %>` are never trimmed — only control directives.
+
 ### Directives
 
 | Directive                                    | Purpose                     |
 | -------------------------------------------- | --------------------------- |
+| `# comment text`                           | Comment (no output)         |
 | `each collection as item`                  | Iterate array               |
 | `each map as key, value`                   | Iterate map key-value pairs |
 | `if condition`                             | Conditional                 |
