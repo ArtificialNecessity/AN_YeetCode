@@ -192,7 +192,114 @@ public class TemplateLexer
             UpdateLineColumn(templateSource[blockContentStart..currentPosition], ref currentLine, ref currentColumn);
         }
 
+        return TrimStandaloneDirectiveLines(tokens);
+    }
+
+    /// <summary>
+    /// Post-process tokens to trim whitespace-only lines that contain only control directives.
+    /// When a directive like <% each ... %> or <% # comment %> is the only thing on a line
+    /// (besides whitespace), the entire line including its newline is removed from output.
+    /// This prevents blank lines from control-flow directives.
+    /// </summary>
+    private static List<TemplateToken> TrimStandaloneDirectiveLines(List<TemplateToken> tokens)
+    {
+        for (int tokenIndex = 0; tokenIndex < tokens.Count; tokenIndex++)
+        {
+            var currentToken = tokens[tokenIndex];
+            if (currentToken.Kind != TemplateTokenKind.DelimitedBlock) continue;
+            if (!IsControlDirective(currentToken.Content)) continue;
+
+            // Check if this directive is standalone on its line
+            bool hasOnlyWhitespaceBefore = CheckOnlyWhitespaceBefore(tokens, tokenIndex);
+            bool hasNewlineOrEndAfter = CheckNewlineOrEndAfter(tokens, tokenIndex);
+
+            if (!hasOnlyWhitespaceBefore || !hasNewlineOrEndAfter) continue;
+
+            // Trim the preceding literal's trailing whitespace (after last \n)
+            if (tokenIndex > 0 && tokens[tokenIndex - 1].Kind == TemplateTokenKind.LiteralText)
+            {
+                string precedingText = tokens[tokenIndex - 1].Content;
+                int lastNewlineIndex = precedingText.LastIndexOf('\n');
+                string trimmedContent = lastNewlineIndex >= 0
+                    ? precedingText[..(lastNewlineIndex + 1)]  // keep up to and including the \n
+                    : "";                                       // all whitespace at start of body
+                tokens[tokenIndex - 1] = new TemplateToken
+                {
+                    Kind = TemplateTokenKind.LiteralText,
+                    Content = trimmedContent,
+                    Line = tokens[tokenIndex - 1].Line,
+                    Column = tokens[tokenIndex - 1].Column
+                };
+            }
+
+            // Trim the following literal's leading newline
+            if (tokenIndex + 1 < tokens.Count && tokens[tokenIndex + 1].Kind == TemplateTokenKind.LiteralText)
+            {
+                string followingText = tokens[tokenIndex + 1].Content;
+                if (followingText.StartsWith("\r\n"))
+                    followingText = followingText[2..];
+                else if (followingText.StartsWith('\n'))
+                    followingText = followingText[1..];
+
+                tokens[tokenIndex + 1] = new TemplateToken
+                {
+                    Kind = TemplateTokenKind.LiteralText,
+                    Content = followingText,
+                    Line = tokens[tokenIndex + 1].Line,
+                    Column = tokens[tokenIndex + 1].Column
+                };
+            }
+        }
+
+        // Remove empty literal tokens created by trimming
+        tokens.RemoveAll(emptyToken =>
+            emptyToken.Kind == TemplateTokenKind.LiteralText && emptyToken.Content.Length == 0);
+
         return tokens;
+    }
+
+    /// <summary>
+    /// Check if everything before this directive on its line is whitespace only.
+    /// </summary>
+    private static bool CheckOnlyWhitespaceBefore(List<TemplateToken> tokens, int directiveIndex)
+    {
+        if (directiveIndex == 0) return true; // start of body
+
+        var precedingToken = tokens[directiveIndex - 1];
+        if (precedingToken.Kind != TemplateTokenKind.LiteralText) return false;
+
+        string precedingText = precedingToken.Content;
+        int lastNewlineIndex = precedingText.LastIndexOf('\n');
+        if (lastNewlineIndex >= 0)
+        {
+            string textAfterLastNewline = precedingText[(lastNewlineIndex + 1)..];
+            return textAfterLastNewline.All(c => c == ' ' || c == '\t');
+        }
+        // No newline — entire text must be whitespace (start of body scenario)
+        return precedingText.All(c => c == ' ' || c == '\t');
+    }
+
+    /// <summary>
+    /// Check if the text after this directive starts with a newline (or is end of body).
+    /// </summary>
+    private static bool CheckNewlineOrEndAfter(List<TemplateToken> tokens, int directiveIndex)
+    {
+        if (directiveIndex >= tokens.Count - 1) return true; // end of body
+
+        var followingToken = tokens[directiveIndex + 1];
+        if (followingToken.Kind != TemplateTokenKind.LiteralText) return false;
+
+        return followingToken.Content.StartsWith('\n') || followingToken.Content.StartsWith("\r\n");
+    }
+
+    /// <summary>
+    /// Determine if a delimited block is a control directive (not a value expression).
+    /// Control directives: each, if, elif, else, /each, /if, define, /define, call, output, /output, # comments.
+    /// </summary>
+    private static bool IsControlDirective(string blockContent)
+    {
+        if (blockContent.StartsWith('#')) return true;
+        return ExpressionParser.IsDirective(blockContent);
     }
 
     private static int CountNewlines(string text, int startIndex, int endIndex)

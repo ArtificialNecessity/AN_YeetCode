@@ -190,4 +190,84 @@ public class TestTemplateEngine
     Assert.Contains("Hello Widget", output);
     Assert.Contains("Goodbye", output);
   }
+
+  [Fact]
+  public void TestStandaloneDirectiveLinesAreTrimmmed()
+  {
+    string dataHjsonText = """
+        {
+          items: [
+            { name: alpha }
+            { name: beta }
+          ]
+        }
+        """;
+    var dataDocument = ParseHjson(dataHjsonText);
+
+    // Each directive is alone on its line — those lines should be trimmed entirely
+    string templateText = "<?yt delim=\"<% %>\" ?>\n" +
+        "Header\n" +
+        "<% each items as item %>\n" +
+        "- <% item.name %>\n" +
+        "<% /each %>\n" +
+        "Footer\n";
+
+    var templateParser = new TemplateParser();
+    var templateAst = templateParser.Parse(templateText);
+    var evaluator = new TemplateEvaluator(dataDocument);
+    string output = evaluator.Evaluate(templateAst);
+
+    // The each/end lines should NOT produce blank lines
+    string expectedOutput = "Header\n- alpha\n- beta\nFooter\n";
+    Assert.Equal(expectedOutput, output);
+  }
+
+  [Fact]
+  public void TestInlineDirectivesAreNotTrimmed()
+  {
+    string dataHjsonText = """
+        {
+          name: Widget
+          active: true
+        }
+        """;
+    var dataDocument = ParseHjson(dataHjsonText);
+
+    // Value expression on its own line should NOT be trimmed (it's not a control directive)
+    string templateText = "<?yt delim=\"<% %>\" ?>\n" +
+        "Name: <% name %>\n" +
+        "Done\n";
+
+    var templateParser = new TemplateParser();
+    var templateAst = templateParser.Parse(templateText);
+    var evaluator = new TemplateEvaluator(dataDocument);
+    string output = evaluator.Evaluate(templateAst);
+
+    // Value expressions inline should be preserved as-is
+    Assert.Equal("Name: Widget\nDone\n", output);
+  }
+
+  [Fact]
+  public void TestStandaloneCommentLinesAreTrimmed()
+  {
+    string dataHjsonText = """
+        {
+          name: Widget
+        }
+        """;
+    var dataDocument = ParseHjson(dataHjsonText);
+
+    // Comment on its own line should be trimmed entirely (no blank line)
+    string templateText = "<?yt delim=\"<% %>\" ?>\n" +
+        "Before\n" +
+        "<% # This comment should vanish completely %>\n" +
+        "After\n";
+
+    var templateParser = new TemplateParser();
+    var templateAst = templateParser.Parse(templateText);
+    var evaluator = new TemplateEvaluator(dataDocument);
+    string output = evaluator.Evaluate(templateAst);
+
+    Assert.Equal("Before\nAfter\n", output);
+  }
 }
