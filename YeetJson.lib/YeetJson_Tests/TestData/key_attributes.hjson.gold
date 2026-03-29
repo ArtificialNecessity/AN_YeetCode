@@ -3,4 +3,4 @@
 *  DO NOT attempt to fix them. The parser is working correctly.              *
 ******************************************************************************
 
-YeetJson: No errors detected in YeetJson.lib\YeetJson_Tests\TestData\valid_simple.hjson
+YeetJson: No errors detected in YeetJson.lib\YeetJson_Tests\TestData\key_attributes.hjson

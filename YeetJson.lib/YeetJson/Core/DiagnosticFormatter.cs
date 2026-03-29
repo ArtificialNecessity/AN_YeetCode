@@ -13,8 +13,10 @@ public class DiagnosticFormatter
     private const string SEPARATOR_LINE     = "-------------------------------------------------------------------------";
 
     private const string TEST_MODE_BANNER =
-        "  !! TEST MODE — This error is INTENTIONAL. Do NOT fix it.\n" +
-        "  !! The parser is working correctly by detecting this expected error.";
+        "******************************************************************************\n" +
+        "*  TEST MODE -- All errors below are INTENTIONAL test fixtures.              *\n" +
+        "*  DO NOT attempt to fix them. The parser is working correctly.              *\n" +
+        "******************************************************************************";
 
     public string FormatForAI(ParseResult parseResult, string sourceText, bool isTestMode = false, string? sourceFilePath = null)
     {
@@ -46,12 +48,6 @@ public class DiagnosticFormatter
         foreach (var structuralError in parseResult.StructuralErrors)
         {
             outputBuilder.AppendLine(ERROR_BANNER_START);
-
-            if (isTestMode)
-            {
-                outputBuilder.AppendLine(TEST_MODE_BANNER);
-            }
-
             outputBuilder.AppendLine($"  File:      {fileLabel}");
             outputBuilder.AppendLine($"  Location:  Line {structuralError.Line}, Column {structuralError.Column}");
             outputBuilder.AppendLine($"  Type:      {structuralError.Kind} (structural)");
@@ -89,12 +85,6 @@ public class DiagnosticFormatter
         foreach (var semanticError in parseResult.SemanticErrors)
         {
             outputBuilder.AppendLine(ERROR_BANNER_START);
-
-            if (isTestMode)
-            {
-                outputBuilder.AppendLine(TEST_MODE_BANNER);
-            }
-
             outputBuilder.AppendLine($"  File:      {fileLabel}");
             outputBuilder.AppendLine($"  Location:  Line {semanticError.Line}, Column {semanticError.Column}");
             outputBuilder.AppendLine($"  Type:      {semanticError.Kind} (semantic)");

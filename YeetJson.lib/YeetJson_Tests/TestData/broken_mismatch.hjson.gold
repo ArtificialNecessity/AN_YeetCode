@@ -1,10 +1,10 @@
-!! TEST MODE — This error is INTENTIONAL. Do NOT fix it.
-  !! The parser is working correctly by detecting this expected error.
+******************************************************************************
+*  TEST MODE -- All errors below are INTENTIONAL test fixtures.              *
+*  DO NOT attempt to fix them. The parser is working correctly.              *
+******************************************************************************
 
 ===[ YeetJson: Error Start ]=============================================
-  !! TEST MODE — This error is INTENTIONAL. Do NOT fix it.
-  !! The parser is working correctly by detecting this expected error.
-  File:      (unknown)
+  File:      YeetJson.lib\YeetJson_Tests\TestData\broken_mismatch.hjson
   Location:  Line 23, Column 4
   Type:      MismatchedPair (structural)
   Message:   Closing '{' at line 23 doesn't match opening '[' at line 19
@@ -32,9 +32,7 @@
 ===[ YeetJson: Error End ]===============================================
 
 ===[ YeetJson: Error Start ]=============================================
-  !! TEST MODE — This error is INTENTIONAL. Do NOT fix it.
-  !! The parser is working correctly by detecting this expected error.
-  File:      (unknown)
+  File:      YeetJson.lib\YeetJson_Tests\TestData\broken_mismatch.hjson
   Location:  Line 1, Column 1
   Type:      StructuralDependency (semantic)
   Message:   Cannot parse HJSON content until structural errors are resolved
@@ -45,7 +43,7 @@
 -------------------------------------------------------------------------
   REPAIR SUMMARY
 -------------------------------------------------------------------------
-  File:             (unknown)
+  File:             YeetJson.lib\YeetJson_Tests\TestData\broken_mismatch.hjson
   Primary issue:    Closing '{' at line 23 doesn't match opening '[' at line 19
   Recommended fix:  Replace '}' with ']' at line 23
 
