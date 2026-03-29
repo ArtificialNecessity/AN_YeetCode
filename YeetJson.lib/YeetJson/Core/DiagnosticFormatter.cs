@@ -3,154 +3,144 @@ namespace YeetJson;
 using System.Text;
 
 /// <summary>
-/// Formats parse results as AI-friendly diagnostic output.
-/// Supports --testMode which adds clear banners warning that errors are intentional test fixtures.
+/// Formats parse results as clean, readable diagnostic output.
+/// Designed for both AI and human consumption — no markdown, no emoji, just clear structure.
 /// </summary>
 public class DiagnosticFormatter
 {
-    private const string TEST_MODE_BANNER = @"
-╔══════════════════════════════════════════════════════════════════════════════╗
-║  ⚠️  THIS IS A TEST MODE ERROR - DO NOT FIX THIS ERROR!                      ║
-║      This error is INTENTIONALLY present in the test file for validation.   ║
-║      The parser is working correctly by detecting this expected error.       ║
-╚══════════════════════════════════════════════════════════════════════════════╝";
+    private const string ERROR_BANNER_START = "===[ YeetJson: Error Start ]=============================================";
+    private const string ERROR_BANNER_END   = "===[ YeetJson: Error End ]===============================================";
+    private const string SEPARATOR_LINE     = "-------------------------------------------------------------------------";
 
-    private const string TEST_MODE_HEADER = @"
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                         🧪 TEST MODE ACTIVE 🧪                               ║
-║  All errors below are INTENTIONAL test fixtures. DO NOT attempt to fix them.║
-║  These errors validate that the parser correctly detects structural issues.  ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-";
+    private const string TEST_MODE_BANNER =
+        "  !! TEST MODE — This error is INTENTIONAL. Do NOT fix it.\n" +
+        "  !! The parser is working correctly by detecting this expected error.";
 
-    public string FormatForAI(ParseResult parseResult, string sourceText, bool isTestMode = false)
+    public string FormatForAI(ParseResult parseResult, string sourceText, bool isTestMode = false, string? sourceFilePath = null)
     {
         var outputBuilder = new StringBuilder();
         var sourceLines = sourceText.Split('\n');
+        string fileLabel = sourceFilePath ?? "(unknown)";
 
-        outputBuilder.AppendLine("# HJSON PARSE DIAGNOSTICS");
-        outputBuilder.AppendLine();
+        int totalErrorCount = parseResult.StructuralErrors.Count + parseResult.SemanticErrors.Count;
 
-        // Add test mode header if active
-        if (isTestMode)
+        if (totalErrorCount == 0 && !isTestMode)
         {
-            outputBuilder.AppendLine(TEST_MODE_HEADER);
+            outputBuilder.AppendLine($"YeetJson: No errors detected in {fileLabel}");
+            return outputBuilder.ToString();
         }
 
-        // Structural errors first (these are usually root causes)
-        if (parseResult.StructuralErrors.Any())
+        if (isTestMode)
         {
-            outputBuilder.AppendLine("## STRUCTURAL ERRORS (likely root causes)");
+            outputBuilder.AppendLine(TEST_MODE_BANNER);
+            outputBuilder.AppendLine();
+        }
+
+        if (totalErrorCount == 0)
+        {
+            outputBuilder.AppendLine($"YeetJson: No errors detected in {fileLabel}");
+            return outputBuilder.ToString();
+        }
+
+        // Structural errors (root causes)
+        foreach (var structuralError in parseResult.StructuralErrors)
+        {
+            outputBuilder.AppendLine(ERROR_BANNER_START);
+
+            if (isTestMode)
+            {
+                outputBuilder.AppendLine(TEST_MODE_BANNER);
+            }
+
+            outputBuilder.AppendLine($"  File:      {fileLabel}");
+            outputBuilder.AppendLine($"  Location:  Line {structuralError.Line}, Column {structuralError.Column}");
+            outputBuilder.AppendLine($"  Type:      {structuralError.Kind} (structural)");
+            outputBuilder.AppendLine($"  Message:   {structuralError.Message}");
             outputBuilder.AppendLine();
 
-            foreach (var structuralError in parseResult.StructuralErrors)
+            // Code context at error location
+            AppendCodeContext(outputBuilder, sourceLines, structuralError.Line, 3);
+            outputBuilder.AppendLine();
+
+            // Repair hypotheses
+            if (structuralError.Hypotheses.Count > 0)
             {
-                // Add test mode banner before each error if in test mode
-                if (isTestMode)
+                outputBuilder.AppendLine("  Likely Fixes (ranked by confidence):");
+                foreach (var hypothesis in structuralError.Hypotheses.Take(3))
                 {
-                    outputBuilder.AppendLine(TEST_MODE_BANNER);
-                    outputBuilder.AppendLine();
+                    outputBuilder.AppendLine($"    - [{hypothesis.Confidence:P0}] {hypothesis.Description}");
                 }
-
-                outputBuilder.AppendLine($"### {structuralError.Kind}");
-                outputBuilder.AppendLine($"**Location:** Line {structuralError.Line}, Column {structuralError.Column}");
-                outputBuilder.AppendLine($"**Message:** {structuralError.Message}");
                 outputBuilder.AppendLine();
-
-                // Code context at error location
-                outputBuilder.AppendLine("**Context:**");
-                outputBuilder.AppendLine("```hjson");
-                AppendCodeContext(outputBuilder, sourceLines, structuralError.Line, 3);
-                outputBuilder.AppendLine("```");
-                outputBuilder.AppendLine();
-
-                // Repair hypotheses
-                if (structuralError.Hypotheses.Any())
-                {
-                    outputBuilder.AppendLine("**Likely fixes (ranked by confidence):**");
-                    foreach (var hypothesis in structuralError.Hypotheses.Take(3))
-                    {
-                        outputBuilder.AppendLine($"- [{hypothesis.Confidence:P0}] {hypothesis.Description}");
-                    }
-                    outputBuilder.AppendLine();
-                }
-
-                // Show opener context if different from error line
-                if (structuralError.Opener != null && structuralError.Opener.Line != structuralError.Line)
-                {
-                    outputBuilder.AppendLine($"**Related opener at line {structuralError.Opener.Line}:**");
-                    outputBuilder.AppendLine("```hjson");
-                    AppendCodeContext(outputBuilder, sourceLines, structuralError.Opener.Line, 2);
-                    outputBuilder.AppendLine("```");
-                    outputBuilder.AppendLine();
-                }
             }
+
+            // Show opener context if different from error line
+            if (structuralError.Opener != null && structuralError.Opener.Line != structuralError.Line)
+            {
+                outputBuilder.AppendLine($"  Related opener at line {structuralError.Opener.Line}:");
+                AppendCodeContext(outputBuilder, sourceLines, structuralError.Opener.Line, 2);
+                outputBuilder.AppendLine();
+            }
+
+            outputBuilder.AppendLine(ERROR_BANNER_END);
+            outputBuilder.AppendLine();
         }
 
         // Semantic errors
-        if (parseResult.SemanticErrors.Any())
+        foreach (var semanticError in parseResult.SemanticErrors)
         {
-            outputBuilder.AppendLine("## SEMANTIC ERRORS");
-            outputBuilder.AppendLine();
+            outputBuilder.AppendLine(ERROR_BANNER_START);
 
-            foreach (var semanticError in parseResult.SemanticErrors)
+            if (isTestMode)
             {
-                // Add test mode banner before each error if in test mode
-                if (isTestMode)
-                {
-                    outputBuilder.AppendLine(TEST_MODE_BANNER);
-                    outputBuilder.AppendLine();
-                }
-
-                outputBuilder.AppendLine($"### {semanticError.Kind} at line {semanticError.Line}");
-                outputBuilder.AppendLine($"**Message:** {semanticError.Message}");
-
-                if (semanticError.StructuralContext != null)
-                {
-                    outputBuilder.AppendLine($"**⚠️ Note:** {semanticError.Note}");
-                    outputBuilder.AppendLine("Fix structural errors first; this may resolve automatically.");
-                }
-
-                outputBuilder.AppendLine();
+                outputBuilder.AppendLine(TEST_MODE_BANNER);
             }
-        }
 
-        // Summary section
-        outputBuilder.AppendLine("## SUMMARY FOR REPAIR");
-        outputBuilder.AppendLine();
+            outputBuilder.AppendLine($"  File:      {fileLabel}");
+            outputBuilder.AppendLine($"  Location:  Line {semanticError.Line}, Column {semanticError.Column}");
+            outputBuilder.AppendLine($"  Type:      {semanticError.Kind} (semantic)");
+            outputBuilder.AppendLine($"  Message:   {semanticError.Message}");
 
-        if (isTestMode)
-        {
-            outputBuilder.AppendLine("**🧪 TEST MODE:** Errors above are intentional test fixtures.");
+            if (semanticError.StructuralContext != null)
+            {
+                outputBuilder.AppendLine($"  Note:      {semanticError.Note}");
+                outputBuilder.AppendLine("             Fix structural errors first; this may resolve automatically.");
+            }
+
+            outputBuilder.AppendLine(ERROR_BANNER_END);
             outputBuilder.AppendLine();
         }
 
-        if (parseResult.StructuralErrors.Any())
+        // Repair summary
+        if (parseResult.StructuralErrors.Count > 0)
         {
+            outputBuilder.AppendLine(SEPARATOR_LINE);
+            outputBuilder.AppendLine("  REPAIR SUMMARY");
+            outputBuilder.AppendLine(SEPARATOR_LINE);
+
             var primaryError = parseResult.StructuralErrors.First();
             var bestFix = primaryError.Hypotheses.FirstOrDefault();
 
-            outputBuilder.AppendLine($"**Primary issue:** {primaryError.Message}");
+            outputBuilder.AppendLine($"  File:             {fileLabel}");
+            outputBuilder.AppendLine($"  Primary issue:    {primaryError.Message}");
             if (bestFix != null)
             {
-                outputBuilder.AppendLine($"**Recommended fix:** {bestFix.Description}");
+                outputBuilder.AppendLine($"  Recommended fix:  {bestFix.Description}");
             }
             outputBuilder.AppendLine();
-            outputBuilder.AppendLine("After fixing structural errors, re-parse to check for remaining issues.");
+            outputBuilder.AppendLine("  After fixing structural errors, re-parse to check for remaining issues.");
+            outputBuilder.AppendLine(SEPARATOR_LINE);
         }
-        else if (parseResult.SemanticErrors.Any())
+        else if (parseResult.SemanticErrors.Count > 0)
         {
-            outputBuilder.AppendLine($"Structure is valid. {parseResult.SemanticErrors.Count} semantic error(s) to fix.");
-        }
-        else
-        {
-            outputBuilder.AppendLine("✓ No errors detected. Document is valid HJSON.");
+            outputBuilder.AppendLine(SEPARATOR_LINE);
+            outputBuilder.AppendLine($"  Structure is valid. {parseResult.SemanticErrors.Count} semantic error(s) to fix in {fileLabel}.");
+            outputBuilder.AppendLine(SEPARATOR_LINE);
         }
 
         return outputBuilder.ToString();
     }
 
-    private void AppendCodeContext(StringBuilder outputBuilder, string[] sourceLines, int targetLineNumber, int contextLineCount)
+    private static void AppendCodeContext(StringBuilder outputBuilder, string[] sourceLines, int targetLineNumber, int contextLineCount)
     {
         int startLineIndex = Math.Max(0, targetLineNumber - 1 - contextLineCount);
         int endLineIndex = Math.Min(sourceLines.Length - 1, targetLineNumber - 1 + contextLineCount);
@@ -159,7 +149,7 @@ public class DiagnosticFormatter
         {
             string lineMarker = (lineIndex == targetLineNumber - 1) ? ">>>" : "   ";
             int displayLineNumber = lineIndex + 1;
-            outputBuilder.AppendLine($"{lineMarker} {displayLineNumber,4} | {sourceLines[lineIndex]}");
+            outputBuilder.AppendLine($"  {lineMarker} {displayLineNumber,4} | {sourceLines[lineIndex]}");
         }
     }
 }

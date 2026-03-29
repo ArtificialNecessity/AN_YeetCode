@@ -14,10 +14,16 @@
     <VersionPrefix>0.0.0</VersionPrefix>
     <Authors>David Jeske</Authors>
     <Description>YeetCode - Schema-driven meta-programming tool for language-to-language transformation</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\YeetJson.lib\YeetJson\YeetJson.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README-YeetCode-nuget.md" Pack="true" PackagePath="README.md" Visible="false" />
   </ItemGroup>
 
 </Project>
