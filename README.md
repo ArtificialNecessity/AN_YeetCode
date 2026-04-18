@@ -3,7 +3,12 @@
 (C)opyright 2026 by David Jeske <davidj@gmail.com>
 Licensed under Apache 2.0
 
-**Yeet one language into another.   -   HJSon and Json Parsing with errors your AI will love as much as you will.**
+**Yeet one language into another.**
+
+Quick Summaries:
+
+- [README-YeetCode-nuget.md] - hjson or custom grammar template driven generation
+- [README-YeetJson-nuget.md] - HJSon and Json Parsing with errors your AI will love as much as you will.**
 
 YeetCode is a schema-driven meta-programming tool for language-to-language transformation. It parses custom syntax into validated HJSON, then generates multi-file output through templates.
 
