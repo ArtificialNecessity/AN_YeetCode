@@ -36,7 +36,7 @@ message Widget {
 }
 ```
 
-↓ *YeetCode pipeline* ↓
+↓ *YeetCode pipeline* ↓ - [**20_ProtoBuff_YeetCode.md**](_SPECS/20_ProtoBuff_YeetCode.md)
 
 ```csharp
 public class Widget
@@ -63,12 +63,12 @@ public class Widget
 
 ## Getting Started
 
-See [**Intro to YeetCode**](_SPECS/IntroToYeetCode.md) for a complete walkthrough with examples.
+See [**Intro to YeetCode**](_SPECS/00_IntroToYeetCode.md) for a complete walkthrough with examples.
 
 ## Documentation
 
-- [**IntroToYeetCode.md**](_SPECS/IntroToYeetCode.md) — Quick start guide with complete example
-- [**00_YeetCodeSpec.md**](_SPECS/00_YeetCodeSpec.md) — Full specification
+- [**IntroToYeetCode.md**](_SPECS/00_IntroToYeetCode.md) — Quick start guide with complete example
+- [**YeetCodeSpec.md**](_SPECS/01_YeetCodeSpec.md) — Full specification
 - [**20_ProtoBuff_YeetCode.md**](_SPECS/20_ProtoBuff_YeetCode.md) — Protobuf → C# example
 - [**05_YeetCode_ParserGenerator.md**](_SPECS/05_YeetCode_ParserGenerator.md) — Runtime parser generation
 
