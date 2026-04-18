@@ -110,4 +110,4 @@ See [**Intro to YeetCode**](_SPECS/00_IntroToYeetCode.md) for a complete walkthr
 
 ## License
 
-(not sure yet)
+Apache 2.0
