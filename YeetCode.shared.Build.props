@@ -5,7 +5,7 @@
   It provides:
     1. Git-height versioning via version.jsonc + ComputeGitVersion target
     2. Local NuGet feed deployment via LOCAL_NUGET_REPO env var
-    3. ArtificialNecessity.CodeAnalyzers (provides JSONC-tolerant JsonPeek MSBuild task)
+    3. ArtificialNecessity.CodeAnalyzers (analyzer package)
     4. Centralized output paths (bin/, bin/Packages/)
 
   NOT auto-discovered — must be explicitly imported via:
@@ -22,12 +22,12 @@
     <PackageOutputPath>$(BinDir)\Packages\$(Configuration)</PackageOutputPath>
   </PropertyGroup>
 
-  <!-- ArtificialNecessity.CodeAnalyzers provides JsonPeek.exe CLI tool (JSONC-tolerant)
-       used by ComputeGitVersion to read version.jsonc, and by build scripts to increment versions.
+  <!-- ArtificialNecessity.CodeAnalyzers — analyzer package.
+       Version reading from version.jsonc is now done via MSBuild property functions
+       (cross-platform, no external .exe needed).
        EnforceExplicitEnumValues defaults to none — projects opt in explicitly. -->
   <PropertyGroup>
     <ANCodeAnalyzersVersion>0.1.13</ANCodeAnalyzersVersion>
-    <JsonPeekExePath>$(USERPROFILE)\.nuget\packages\artificialnecessity.codeanalyzers\$(ANCodeAnalyzersVersion)\tools\net8.0\any\JsonPeek.exe</JsonPeekExePath>
     <EnforceExplicitEnumValues Condition="'$(EnforceExplicitEnumValues)' == ''">none</EnforceExplicitEnumValues>
   </PropertyGroup>
   <ItemGroup>
@@ -85,17 +85,12 @@
           BeforeTargets="GenerateNuspecDependencies;GetPackageVersionInfo;Pack;GenerateAssemblyInfo"
           Condition="'$(IsPackable)' == 'true' AND '$(Prerelease)' != 'true'">
 
-    <!-- Read base version from version.jsonc -->
-    <Exec Command="&quot;$(JsonPeekExePath)&quot; &quot;$(RepositoryRootDirectory)version.jsonc&quot; version"
-          ConsoleToMSBuild="true" StandardOutputImportance="low">
-      <Output TaskParameter="ConsoleOutput" PropertyName="_BaseVersionFromJson" />
-    </Exec>
-
-    <!-- Read current buildNumberOffset (always needed) -->
-    <Exec Command="&quot;$(JsonPeekExePath)&quot; &quot;$(RepositoryRootDirectory)version.jsonc&quot; buildNumberOffset"
-          ConsoleToMSBuild="true" StandardOutputImportance="low">
-      <Output TaskParameter="ConsoleOutput" PropertyName="_BuildNumberOffsetFromJson" />
-    </Exec>
+    <!-- Read version.jsonc and extract values via regex (cross-platform, no external tool) -->
+    <PropertyGroup>
+      <_VersionJsoncContent>$([System.IO.File]::ReadAllText('$(RepositoryRootDirectory)version.jsonc'))</_VersionJsoncContent>
+      <_BaseVersionFromJson>$([System.Text.RegularExpressions.Regex]::Match($(_VersionJsoncContent), '"version"\s*:\s*"([^"]+)"').Groups[1].Value)</_BaseVersionFromJson>
+      <_BuildNumberOffsetFromJson>$([System.Text.RegularExpressions.Regex]::Match($(_VersionJsoncContent), '"buildNumberOffset"\s*:\s*(\d+)').Groups[1].Value)</_BuildNumberOffsetFromJson>
+    </PropertyGroup>
 
     <PropertyGroup>
       <_BuildNumberOffsetFromJson Condition="'$(_BuildNumberOffsetFromJson)' == ''">0</_BuildNumberOffsetFromJson>
@@ -131,15 +126,12 @@
           BeforeTargets="GenerateNuspecDependencies;GetPackageVersionInfo;Pack;GenerateAssemblyInfo"
           Condition="'$(IsPackable)' == 'true' AND '$(Prerelease)' == 'true'">
 
-    <!-- Read base version and current buildNumberOffset (no increment) -->
-    <Exec Command="&quot;$(JsonPeekExePath)&quot; &quot;$(RepositoryRootDirectory)version.jsonc&quot; version"
-          ConsoleToMSBuild="true" StandardOutputImportance="low">
-      <Output TaskParameter="ConsoleOutput" PropertyName="_BaseVersionFromJson" />
-    </Exec>
-    <Exec Command="&quot;$(JsonPeekExePath)&quot; &quot;$(RepositoryRootDirectory)version.jsonc&quot; buildNumberOffset"
-          ConsoleToMSBuild="true" StandardOutputImportance="low">
-      <Output TaskParameter="ConsoleOutput" PropertyName="_BuildNumberOffsetFromJson" />
-    </Exec>
+    <!-- Read version.jsonc and extract values via regex (cross-platform, no external tool) -->
+    <PropertyGroup>
+      <_VersionJsoncContent>$([System.IO.File]::ReadAllText('$(RepositoryRootDirectory)version.jsonc'))</_VersionJsoncContent>
+      <_BaseVersionFromJson>$([System.Text.RegularExpressions.Regex]::Match($(_VersionJsoncContent), '"version"\s*:\s*"([^"]+)"').Groups[1].Value)</_BaseVersionFromJson>
+      <_BuildNumberOffsetFromJson>$([System.Text.RegularExpressions.Regex]::Match($(_VersionJsoncContent), '"buildNumberOffset"\s*:\s*(\d+)').Groups[1].Value)</_BuildNumberOffsetFromJson>
+    </PropertyGroup>
 
     <PropertyGroup>
       <_BuildNumberOffsetFromJson Condition="'$(_BuildNumberOffsetFromJson)' == ''">0</_BuildNumberOffsetFromJson>
