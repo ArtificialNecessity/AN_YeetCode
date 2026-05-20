@@ -381,6 +381,11 @@ Value expressions like `<% name %>` are never trimmed — only control directive
 
 ---
 
+## Community
+
+Questions, ideas, or feedback? Join the discussion:
+https://github.com/ArtificialNecessity/AN_YeetCode/discussions
+
 ## License
 
-MIT
+Apache 2.0 -- https://github.com/ArtificialNecessity/AN_YeetCode

@@ -16,6 +16,9 @@
     <Description>YeetCode - Schema-driven meta-programming tool for language-to-language transformation</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ArtificialNecessity/AN_YeetCode</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ArtificialNecessity/AN_YeetCode</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>

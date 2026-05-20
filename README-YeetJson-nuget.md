@@ -223,6 +223,11 @@ Attributes are emitted as a `__keyAttributes` sibling node in the parsed JSON, p
 
 ---
 
+## Community
+
+Questions, ideas, or feedback? Join the discussion:
+https://github.com/ArtificialNecessity/AN_YeetCode/discussions
+
 ## License
 
-Apache 2.0
+Apache 2.0 -- https://github.com/ArtificialNecessity/AN_YeetCode

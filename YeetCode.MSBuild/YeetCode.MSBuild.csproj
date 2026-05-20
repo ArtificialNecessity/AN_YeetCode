@@ -15,6 +15,9 @@
     <Description>YeetCode MSBuild tasks for schema-driven code generation</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ArtificialNecessity/AN_YeetCode</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ArtificialNecessity/AN_YeetCode</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
 
     <!-- MSBuild task packaging: we manually control what goes in the package.
          IncludeBuildOutput=false prevents the DLL from going to lib/.
