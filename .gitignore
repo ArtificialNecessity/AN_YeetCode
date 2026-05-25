@@ -30,3 +30,6 @@ Thumbs.db
 *.sln.iml
 
 *.testout
+
+# Pipeline test generated output (gold files are in TestData/)
+YeetCode.TestPipeline/generated/

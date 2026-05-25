@@ -1,0 +1,9 @@
+// Auto-generated from  — do not edit
+// Package: 
+
+public class Widget
+{
+    public string name { get; set; } // tag 1
+    public int32 quantity { get; set; } // tag 2
+    public string description { get; set; } // tag 3
+}

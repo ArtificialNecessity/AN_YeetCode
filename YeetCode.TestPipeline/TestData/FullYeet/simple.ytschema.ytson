@@ -2,10 +2,9 @@
   syntax [optional]: string
   package [optional]: string
   message_name: string
-  fields: {
-    @: {
-      type: string
-      tag: int
-    }
-  }
+  fields: [{
+    type: string
+    name: string
+    tag: string
+  }]
 }

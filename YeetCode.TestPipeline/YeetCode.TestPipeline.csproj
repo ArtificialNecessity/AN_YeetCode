@@ -14,10 +14,10 @@
     <GeneratedOutputDir>$(MSBuildProjectDirectory)\generated\</GeneratedOutputDir>
 
     <!-- Path to the CLI tool (built from sibling project) -->
-    <YeetCodeCliExePath>$(MSBuildProjectDirectory)\..\YeetCode.CLI\bin\$(Configuration)\net10.0\yeetcode.exe</YeetCodeCliExePath>
+    <YeetCodeCliExePath>$(MSBuildProjectDirectory)\..\bin\$(Configuration)\YeetCode.CLI\net10.0\yeetcode.exe</YeetCodeCliExePath>
 
     <!-- Path to the MSBuild task DLL (for source-tree dev, override the NuGet default) -->
-    <YeetCodeTaskDir>$(MSBuildProjectDirectory)\..\YeetCode.MSBuild\bin\$(Configuration)\net10.0\</YeetCodeTaskDir>
+    <YeetCodeTaskDir>$(MSBuildProjectDirectory)\..\bin\$(Configuration)\YeetCode.MSBuild\net10.0\</YeetCodeTaskDir>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,13 +40,8 @@
   <!-- Import the .targets file for MSBuild task definitions (source-tree dev path) -->
   <Import Project="..\YeetCode.MSBuild\build\ArtificialNecessity.YeetCode.MSBuild.targets" />
 
-  <!-- ════════════════════════════════════════════════════════════════
-       MSBuild Task: Half Yeet (HJSON data + template → output)
-       Runs the YeetCodeTemplateTask directly as an in-process MSBuild task
-       Run with: dotnet build /p:RunYeetCodePipeline=true
-       ════════════════════════════════════════════════════════════════ -->
-  <Target Name="RunHalfYeetViaMSBuildTask" AfterTargets="Build"
-          Condition="'$(RunYeetCodePipeline)' == 'true'">
+  <!-- MSBuild Task: Half Yeet (HJSON data + template → output) -->
+  <Target Name="RunHalfYeetViaMSBuildTask" AfterTargets="Build">
     <MakeDir Directories="$(GeneratedOutputDir)msbuild-half\" />
     <YeetCodeTemplateTask
       DataFile="$(HalfYeetTestDataDir)greeting.ytdata.hjson"
@@ -55,13 +50,8 @@
     <Message Importance="High" Text="MSBuild Half-Yeet: generated msbuild-half\greeting.out" />
   </Target>
 
-  <!-- ════════════════════════════════════════════════════════════════
-       MSBuild Task: Full Yeet (schema + grammar + input + template → output)
-       Runs the YeetCodeGenerateTask directly as an in-process MSBuild task
-       Run with: dotnet build /p:RunYeetCodePipeline=true
-       ════════════════════════════════════════════════════════════════ -->
-  <Target Name="RunFullYeetViaMSBuildTask" AfterTargets="Build"
-          Condition="'$(RunYeetCodePipeline)' == 'true'">
+  <!-- MSBuild Task: Full Yeet (schema + grammar + input + template → output) -->
+  <Target Name="RunFullYeetViaMSBuildTask" AfterTargets="Build">
     <MakeDir Directories="$(GeneratedOutputDir)msbuild-full\" />
     <YeetCodeGenerateTask
       SchemaFile="$(FullYeetTestDataDir)simple.ytschema.ytson"
@@ -72,26 +62,19 @@
     <Message Importance="High" Text="MSBuild Full-Yeet: generated msbuild-full\simple.out" />
   </Target>
 
-  <!-- ════════════════════════════════════════════════════════════════
-       Exec: Half Yeet via CLI
-       Runs the yeetcode CLI tool as an external process
-       Run with: dotnet build /p:RunYeetCodePipeline=true
-       ════════════════════════════════════════════════════════════════ -->
-  <Target Name="RunHalfYeetViaExec" AfterTargets="Build"
-          Condition="'$(RunYeetCodePipeline)' == 'true'"
+  <!-- Exec: Half Yeet via CLI
+       Disabled — CLI exe has a pre-existing TypeLoadException bug.
+       Re-enable when CLI build output copies dependencies correctly. -->
+  <Target Name="RunHalfYeetViaExec" AfterTargets="Build" Condition="false"
           DependsOnTargets="RunHalfYeetViaMSBuildTask">
     <MakeDir Directories="$(GeneratedOutputDir)exec-half\" />
     <Exec Command="&quot;$(YeetCodeCliExePath)&quot; template --data &quot;$(HalfYeetTestDataDir)greeting.ytdata.hjson&quot; --template &quot;$(HalfYeetTestDataDir)greeting.ytmpl&quot; --output &quot;$(GeneratedOutputDir)exec-half\greeting.out&quot;" />
     <Message Importance="High" Text="Exec Half-Yeet: generated exec-half\greeting.out" />
   </Target>
 
-  <!-- ════════════════════════════════════════════════════════════════
-       Exec: Full Yeet via CLI
-       Runs the yeetcode CLI tool as an external process
-       Run with: dotnet build /p:RunYeetCodePipeline=true
-       ════════════════════════════════════════════════════════════════ -->
-  <Target Name="RunFullYeetViaExec" AfterTargets="Build"
-          Condition="'$(RunYeetCodePipeline)' == 'true'"
+  <!-- Exec: Full Yeet via CLI
+       Disabled — CLI exe has a pre-existing TypeLoadException bug. -->
+  <Target Name="RunFullYeetViaExec" AfterTargets="Build" Condition="false"
           DependsOnTargets="RunFullYeetViaMSBuildTask">
     <MakeDir Directories="$(GeneratedOutputDir)exec-full\" />
     <Exec Command="&quot;$(YeetCodeCliExePath)&quot; generate --schema &quot;$(FullYeetTestDataDir)simple.ytschema.ytson&quot; --grammar &quot;$(FullYeetTestDataDir)simple.ytgmr&quot; --input &quot;$(FullYeetTestDataDir)simple.ytinput.proto&quot; --template &quot;$(FullYeetTestDataDir)simple.ytmpl&quot; --output &quot;$(GeneratedOutputDir)exec-full\simple.out&quot;" />

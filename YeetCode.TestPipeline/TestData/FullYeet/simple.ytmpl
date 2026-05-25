@@ -4,7 +4,7 @@
 
 public class <%message_name%>
 {
-    <%each fields as f_name, f%>
-    public <%f.type%> <%f_name%> { get; set; } // tag <%f.tag%>
+    <%each fields as f%>
+    public <%f.type%> <%f.name%> { get; set; } // tag <%f.tag%>
     <%/each%>
 }
