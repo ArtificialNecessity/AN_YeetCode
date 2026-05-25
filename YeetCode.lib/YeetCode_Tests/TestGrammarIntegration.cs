@@ -77,9 +77,9 @@ public class TestGrammarIntegration
     [Fact]
     public void TestRepeatCapturesAllIterations_Messages()
     {
-        // Two messages — the repeat (message*) must preserve BOTH, not just the last.
+        // Two messages — captured repeat (messages:message*) must collect BOTH into an array.
         string grammarText = """
-        file ::= message*
+        file ::= messages:message*
         message ::= "message" name:IDENT "{" "}"
         IDENT ::= /[a-zA-Z_][a-zA-Z0-9_]*/
         %skip ::= /(?:\s|\/\/[^\n]*)*/
@@ -94,11 +94,16 @@ public class TestGrammarIntegration
         var interpreter = new PegInterpreter(parsedGrammar);
         var result = interpreter.Parse(input);
 
-        // The root must contain both "Widget" and "Gadget" somewhere.
-        // With the current overwrite bug, only "Gadget" survives.
-        var json = result.RootElement.GetRawText();
-        Assert.Contains("Widget", json);
-        Assert.Contains("Gadget", json);
+        // messages should be an array of 2 objects
+        var messages = result.RootElement.GetProperty("messages");
+        Assert.Equal(System.Text.Json.JsonValueKind.Array, messages.ValueKind);
+        Assert.Equal(2, messages.GetArrayLength());
+
+        // First message is Widget, second is Gadget
+        var msg0 = messages[0];
+        var msg1 = messages[1];
+        Assert.Equal("Widget", msg0.GetProperty("name").GetString());
+        Assert.Equal("Gadget", msg1.GetProperty("name").GetString());
     }
 
     [Fact]

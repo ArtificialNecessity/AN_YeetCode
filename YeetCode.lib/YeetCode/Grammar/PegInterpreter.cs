@@ -206,12 +206,18 @@ public class PegInterpreter
         }
 
         // Determine what to store as the captured value:
-        // 1. If the captured expression was a token match, store the matched text
-        // 2. If it produced sub-captures (from a rule), store those as a dictionary
-        // 3. Otherwise store the raw matched text
+        // 1. If the captured expression was a repeat that collected items, store as array
+        // 2. If the captured expression was a token match, store the matched text
+        // 3. If it produced sub-captures (from a rule), store those as a dictionary
+        // 4. Otherwise store the raw matched text
         object? capturedValue;
 
-        if (captureContext.CapturedData.TryGetValue("__last_token", out var lastTokenText))
+        if (captureContext.CapturedData.TryGetValue("__repeat_items", out var repeatItems))
+        {
+            // Repeat capture — store the collected array of iteration objects
+            capturedValue = repeatItems;
+        }
+        else if (captureContext.CapturedData.TryGetValue("__last_token", out var lastTokenText))
         {
             // Token capture — store the matched text string
             capturedValue = lastTokenText;
@@ -286,6 +292,7 @@ public class PegInterpreter
     private bool TryMatchRepeat(RepeatExpression repeatExpr, ParseContext parseContext)
     {
         int matchCount = 0;
+        var iterationResults = new List<Dictionary<string, object?>>();
 
         while (true)
         {
@@ -302,11 +309,37 @@ public class PegInterpreter
 
             matchCount++;
 
-            // Merge captures from this iteration
-            foreach (var (captureName, captureValue) in iterationContext.CapturedData)
+            // Collect this iteration's captures (excluding internal __ keys)
+            var cleanedCaptures = new Dictionary<string, object?>();
+            foreach (var (key, value) in iterationContext.CapturedData)
             {
-                parseContext.CapturedData[captureName] = captureValue;
+                if (!key.StartsWith("__"))
+                {
+                    cleanedCaptures[key] = value;
+                }
             }
+
+            if (cleanedCaptures.Count > 0)
+            {
+                iterationResults.Add(cleanedCaptures);
+            }
+
+            // Also propagate any __ internal keys (like __path_mapping) from last iteration
+            foreach (var (key, value) in iterationContext.CapturedData)
+            {
+                if (key.StartsWith("__"))
+                {
+                    parseContext.CapturedData[key] = value;
+                }
+            }
+        }
+
+        // If the repeat collected captured data, store it as a list.
+        // This makes fields:field* produce an array of field objects.
+        if (iterationResults.Count > 0)
+        {
+            // Store the list under a special key that TryMatchCapture will pick up
+            parseContext.CapturedData["__repeat_items"] = iterationResults.Cast<object?>().ToList();
         }
 
         // Check if we matched the required number of times
