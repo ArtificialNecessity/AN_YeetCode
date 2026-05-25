@@ -1,0 +1,15 @@
+# Force LF line endings everywhere. No CRLF ever.
+* text=auto eol=lf
+
+# Binary files — don't touch
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.bmp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.vsix binary
