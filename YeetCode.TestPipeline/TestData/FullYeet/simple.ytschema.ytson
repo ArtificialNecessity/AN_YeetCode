@@ -1,12 +1,11 @@
 {
-  syntax: string
-  package: string
-  messages: [{
-    name: string
-    fields: [{
-      name: string
+  syntax [optional]: string
+  package [optional]: string
+  message_name: string
+  fields: {
+    @: {
       type: string
       tag: int
-    }]
-  }]
+    }
+  }
 }

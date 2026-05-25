@@ -1,6 +1,9 @@
 #!/usr/bin/env pwsh
 # publish-nuget.ps1 — Build release packages and push to NuGet.org
 #
+# Versioning is timestamp-based (v2) — every build gets a unique version
+# automatically via YeetCode.shared.Build.props. No version files to manage.
+#
 # Publishes two product families:
 #   1. ArtificialNecessity.YeetJson          — standalone HJSON parser library
 #   2. ArtificialNecessity.YeetCode          — YeetCode library (depends on YeetJson)
@@ -10,8 +13,6 @@
 # Usage:
 #   .\cmd\publish-nuget.ps1          # pack + push all packages
 #   .\cmd\publish-nuget.ps1 -DryRun  # pack only, show what would be pushed
-#
-# Requires: version.jsonc buildNumberOffset is incremented by this script.
 
 param(
     [switch]$DryRun
@@ -23,12 +24,8 @@ $ErrorActionPreference = 'Stop'
 # Resolve paths
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $solutionPath = Join-Path $repoRoot 'AN_YeetCode.sln'
-$versionJsoncPath = Join-Path $repoRoot 'version.jsonc'
 $packageOutputDir = Join-Path $repoRoot 'bin\Packages\Release'
 $localNuGetFeedPath = $env:LOCAL_NUGET_REPO
-
-# JsonPeek tool for version management
-$jsonPeekExePath = Join-Path $env:USERPROFILE '.nuget\packages\artificialnecessity.codeanalyzers\0.1.13\tools\net8.0\any\JsonPeek.exe'
 
 # Package IDs in dependency order
 $packageIds = @(
@@ -48,27 +45,16 @@ $projectPaths = @(
 
 Write-Host "`n=== YeetCode publish-nuget (Release) ===" -ForegroundColor Cyan
 
-# ── Step 1: Increment version ──────────────────────────────────────
-Write-Host "`n[1/4] Incrementing version..." -ForegroundColor Green
-$newBuildOffset = & $jsonPeekExePath --inc-integer $versionJsoncPath buildNumberOffset
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "ERROR: Failed to increment buildNumberOffset in version.jsonc" -ForegroundColor Red
-    exit 1
-}
-$baseVersion = & $jsonPeekExePath $versionJsoncPath version
-$releaseVersion = "$baseVersion.$newBuildOffset"
-Write-Host "Version: $releaseVersion" -ForegroundColor Yellow
-
-# ── Step 2: Build solution ─────────────────────────────────────────
-Write-Host "`n[2/4] Building solution (Release)..." -ForegroundColor Green
+# ── Step 1: Build solution ─────────────────────────────────────────
+Write-Host "`n[1/3] Building solution (Release)..." -ForegroundColor Green
 dotnet build $solutionPath -c Release
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: dotnet build failed" -ForegroundColor Red
     exit $LASTEXITCODE
 }
 
-# ── Step 3: Pack all projects in dependency order ──────────────────
-Write-Host "`n[3/4] Packing packages..." -ForegroundColor Green
+# ── Step 2: Pack all projects in dependency order ──────────────────
+Write-Host "`n[2/3] Packing packages..." -ForegroundColor Green
 $packTimestamp = Get-Date
 
 for ($projectIndex = 0; $projectIndex -lt $projectPaths.Count; $projectIndex++) {
@@ -98,14 +84,14 @@ foreach ($packageFile in $newPackages) {
     Write-Host "  $($packageFile.Name)  (${sizeKB} KB)" -ForegroundColor Green
 }
 
-# ── Step 4: Push to NuGet.org ──────────────────────────────────────
+# ── Step 3: Push to NuGet.org ──────────────────────────────────────
 if ($DryRun) {
     Write-Host "`n[DRY RUN] Would push $($newPackages.Count) packages to https://api.nuget.org/v3/index.json" -ForegroundColor Yellow
     foreach ($packageFile in $newPackages) {
         Write-Host "  [DRY RUN] $($packageFile.Name)" -ForegroundColor Yellow
     }
 } else {
-    Write-Host "`n[4/4] Pushing to NuGet.org..." -ForegroundColor Green
+    Write-Host "`n[3/3] Pushing to NuGet.org..." -ForegroundColor Green
     foreach ($packageFile in $newPackages) {
         Write-Host "  Pushing $($packageFile.Name)..." -ForegroundColor Gray
         dotnet nuget push $packageFile.FullName --source https://api.nuget.org/v3/index.json --skip-duplicate
@@ -126,7 +112,7 @@ if ($localNuGetFeedPath -and (Test-Path $localNuGetFeedPath)) {
 
 # ── Summary ────────────────────────────────────────────────────────
 Write-Host "`n=== Done! ===" -ForegroundColor Green
-Write-Host "Published $($newPackages.Count) packages at version $releaseVersion" -ForegroundColor Green
+Write-Host "Published $($newPackages.Count) packages" -ForegroundColor Green
 Write-Host "  https://www.nuget.org/packages/ArtificialNecessity.YeetJson/" -ForegroundColor Gray
 Write-Host "  https://www.nuget.org/packages/ArtificialNecessity.YeetCode/" -ForegroundColor Gray
 Write-Host "  https://www.nuget.org/packages/ArtificialNecessity.YeetCode.CLI/" -ForegroundColor Gray

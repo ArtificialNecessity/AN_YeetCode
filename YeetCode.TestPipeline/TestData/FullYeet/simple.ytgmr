@@ -1,12 +1,12 @@
 # Simple proto-like grammar for testing
 
-file ::= syntax_decl? package_decl? message*
+file ::= syntax_decl? package_decl? message
 
 syntax_decl ::= "syntax" "=" syntax:QUOTED_STRING ";"
 
 package_decl ::= "package" package:IDENT ";"
 
-message ::= "message" name:IDENT "{" fields:field* "}"
+message ::= "message" message_name:IDENT "{" fields:field* "}"
 
 field ::= type:IDENT name:IDENT "=" tag:INT ";"
 

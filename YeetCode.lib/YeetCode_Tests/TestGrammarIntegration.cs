@@ -38,6 +38,70 @@ public class TestGrammarIntegration
     }
 
     [Fact]
+    public void TestRepeatCapturesAllIterations_Fields()
+    {
+        // A message with multiple fields — each field captures type, name, tag.
+        // The repeat (field*) must preserve ALL fields, not just the last one.
+        string grammarText = """
+        file ::= "message" msg_name:IDENT "{" fields:field* "}"
+        field ::= type:IDENT name:IDENT "=" tag:INT ";"
+        IDENT ::= /[a-zA-Z_][a-zA-Z0-9_]*/
+        INT ::= /[0-9]+/
+        %skip ::= /(?:\s|\/\/[^\n]*)*/
+        """;
+
+        string input = """
+        message Widget {
+            string name = 1;
+            int32 quantity = 2;
+            bool active = 3;
+        }
+        """;
+
+        var parsedGrammar = ParseGrammar(grammarText);
+        var interpreter = new PegInterpreter(parsedGrammar);
+        var result = interpreter.Parse(input);
+
+        var root = result.RootElement;
+        Assert.Equal("Widget", root.GetProperty("msg_name").GetString());
+
+        // fields must contain data from ALL 3 fields, not just the last one.
+        // The JSON must mention all three field names somewhere in the fields structure.
+        var fields = root.GetProperty("fields");
+        var fieldsJson = fields.GetRawText();
+        Assert.Contains("name", fieldsJson);
+        Assert.Contains("quantity", fieldsJson);
+        Assert.Contains("active", fieldsJson);
+    }
+
+    [Fact]
+    public void TestRepeatCapturesAllIterations_Messages()
+    {
+        // Two messages — the repeat (message*) must preserve BOTH, not just the last.
+        string grammarText = """
+        file ::= message*
+        message ::= "message" name:IDENT "{" "}"
+        IDENT ::= /[a-zA-Z_][a-zA-Z0-9_]*/
+        %skip ::= /(?:\s|\/\/[^\n]*)*/
+        """;
+
+        string input = """
+        message Widget { }
+        message Gadget { }
+        """;
+
+        var parsedGrammar = ParseGrammar(grammarText);
+        var interpreter = new PegInterpreter(parsedGrammar);
+        var result = interpreter.Parse(input);
+
+        // The root must contain both "Widget" and "Gadget" somewhere.
+        // With the current overwrite bug, only "Gadget" survives.
+        var json = result.RootElement.GetRawText();
+        Assert.Contains("Widget", json);
+        Assert.Contains("Gadget", json);
+    }
+
+    [Fact]
     public void TestCapturedFieldValues()
     {
         // Grammar that captures a single greeting with a name

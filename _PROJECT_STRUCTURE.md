@@ -120,8 +120,8 @@ AN_YeetCode/
 │           ├── simple.ytinput.proto
 │           └── simple.ytmpl
 │
-├── version.jsonc                      # Version configuration for git-height versioning
-├── YeetCode.shared.Build.props        # Shared build infrastructure
+├── YeetCode.shared.Build.props        # Shared build infrastructure (timestamp-based versioning v2)
+├── .gitattributes                     # Force LF line endings repo-wide
 ├── README.md                          # Project README
 ├── README-nuget.md                    # NuGet package README (how-to-use guide)
 ├── cmd/
