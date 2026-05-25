@@ -92,8 +92,8 @@ public class HjsonContentParser
 
         SkipWhitespaceAndComments();
 
-        // Determine if root has braces or is a bare object
-        if (_position < _sourceText.Length && _sourceText[_position] == '{')
+        // Determine if root has braces/brackets or is a bare object
+        if (_position < _sourceText.Length && (_sourceText[_position] == '{' || _sourceText[_position] == '['))
         {
             WriteValue(jsonWriter);
         }

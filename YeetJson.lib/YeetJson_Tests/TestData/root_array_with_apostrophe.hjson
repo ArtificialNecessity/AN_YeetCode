@@ -1,0 +1,9 @@
+[
+  {
+    path: ./
+    type: narrative/chapters/prose
+    ordering: alpha
+    title: Zoe's Farm, Book 1
+    description: Prose-format chapter files
+  }
+]

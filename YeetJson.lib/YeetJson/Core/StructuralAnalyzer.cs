@@ -176,7 +176,7 @@ public class StructuralAnalyzer
             case '[': delimiterType = DelimiterType.Bracket; return true;
             case '(': delimiterType = DelimiterType.Paren; return true;
             case '"': delimiterType = DelimiterType.DoubleQuote; return true;
-            case '\'': delimiterType = DelimiterType.SingleQuote; return true;
+            // Note: HJSON does NOT use single-quotes as string delimiters. Apostrophes are normal characters.
             default: return false;
         }
     }

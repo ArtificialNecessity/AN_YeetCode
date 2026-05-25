@@ -3,7 +3,12 @@
 (C)opyright 2026 by David Jeske <davidj@gmail.com>
 Licensed under Apache 2.0
 
-**Yeet one language into another.   -   HJSon and Json Parsing with errors your AI will love as much as you will.**
+**Yeet one language into another.**
+
+Quick Summaries:
+
+- [README-YeetCode-nuget.md](README-YeetCode-nuget.md) - hjson or custom grammar template driven generation
+- [README-YeetJson-nuget.md](README-YeetJson-nuget.md) - HJSon and Json Parsing with errors your AI will love as much as you will.**
 
 YeetCode is a schema-driven meta-programming tool for language-to-language transformation. It parses custom syntax into validated HJSON, then generates multi-file output through templates.
 
@@ -36,7 +41,7 @@ message Widget {
 }
 ```
 
-↓ *YeetCode pipeline* ↓
+↓ *YeetCode pipeline* ↓ - [**20_ProtoBuff_YeetCode.md**](_SPECS/20_ProtoBuff_YeetCode.md)
 
 ```csharp
 public class Widget
@@ -63,12 +68,12 @@ public class Widget
 
 ## Getting Started
 
-See [**Intro to YeetCode**](_SPECS/IntroToYeetCode.md) for a complete walkthrough with examples.
+See [**Intro to YeetCode**](_SPECS/00_IntroToYeetCode.md) for a complete walkthrough with examples.
 
 ## Documentation
 
-- [**IntroToYeetCode.md**](_SPECS/IntroToYeetCode.md) — Quick start guide with complete example
-- [**00_YeetCodeSpec.md**](_SPECS/00_YeetCodeSpec.md) — Full specification
+- [**IntroToYeetCode.md**](_SPECS/00_IntroToYeetCode.md) — Quick start guide with complete example
+- [**YeetCodeSpec.md**](_SPECS/01_YeetCodeSpec.md) — Full specification
 - [**20_ProtoBuff_YeetCode.md**](_SPECS/20_ProtoBuff_YeetCode.md) — Protobuf → C# example
 - [**05_YeetCode_ParserGenerator.md**](_SPECS/05_YeetCode_ParserGenerator.md) — Runtime parser generation
 
@@ -110,4 +115,4 @@ See [**Intro to YeetCode**](_SPECS/IntroToYeetCode.md) for a complete walkthroug
 
 ## License
 
-(not sure yet)
+Apache 2.0
