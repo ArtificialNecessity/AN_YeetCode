@@ -55,27 +55,32 @@
        automatically — no version.jsonc, no generated files, no scripts.
 
        Format:
-         AssemblyVersion      = {major}.{YYMM}.{DDHH}.{mmss}
+         AssemblyVersion      = {major}.{YYMM}.{DDHH}.{mmss}   (ushort-constrained)
          FileVersion          = (same as AssemblyVersion)
-         Version              = {major}.{YYMM}.{DDHH}
+         Version/PackageVersion = {major}.{YYMMDD}.{HHmmss}    (NuGet, human-readable)
          InformationalVersion = {AssemblyVersion}-{MACHINE}+g{gitshort}
 
-       Example (2026-05-25 16:53:07 UTC):
+       Example (2026-05-25 16:53:07 local):
          AssemblyVersion:      0.2605.2516.5307
+         Version/PackageVersion: 0.260525.165307
          InformationalVersion: 0.2605.2516.5307-WORKHORSE+ga1b2c3d
 
-       All timestamps are UTC. Each segment stays ≤ 65535.
+       All timestamps are LOCAL TIME. Each segment stays ≤ 65535.
        Just 'dotnet build' — zero ceremony.
        ══════════════════════════════════════════════════════════════════ -->
   <PropertyGroup>
     <YeetCodeMajorVersion>0</YeetCodeMajorVersion>
-    <_BuildYYMM>$([System.DateTime]::UtcNow.ToString("yyMM"))</_BuildYYMM>
-    <_BuildDDHH>$([System.DateTime]::UtcNow.ToString("ddHH"))</_BuildDDHH>
-    <_Buildmmss>$([System.DateTime]::UtcNow.ToString("mmss"))</_Buildmmss>
+    <!-- AssemblyVersion segments (ushort-constrained, split timestamp) -->
+    <_BuildYYMM>$([System.DateTime]::Now.ToString("yyMM"))</_BuildYYMM>
+    <_BuildDDHH>$([System.DateTime]::Now.ToString("ddHH"))</_BuildDDHH>
+    <_Buildmmss>$([System.DateTime]::Now.ToString("mmss"))</_Buildmmss>
     <VersionPrefix>$(YeetCodeMajorVersion).$(_BuildYYMM).$(_BuildDDHH).$(_Buildmmss)</VersionPrefix>
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <FileVersion>$(VersionPrefix)</FileVersion>
-    <Version>$(YeetCodeMajorVersion).$(_BuildYYMM).$(_BuildDDHH)</Version>
+    <!-- PackageVersion segments (NuGet, no ushort constraint — full date+time) -->
+    <_BuildYYMMDD>$([System.DateTime]::Now.ToString("yyMMdd"))</_BuildYYMMDD>
+    <_BuildHHmmss>$([System.DateTime]::Now.ToString("HHmmss"))</_BuildHHmmss>
+    <Version>$(YeetCodeMajorVersion).$(_BuildYYMMDD).$(_BuildHHmmss)</Version>
   </PropertyGroup>
 
   <!-- Suppress SDK's automatic SourceRevisionId — we handle git hash ourselves -->
