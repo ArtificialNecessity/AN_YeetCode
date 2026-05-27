@@ -8,7 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>YeetCode.CLI</RootNamespace>
-    <AssemblyName>yeetcode</AssemblyName>
+    <AssemblyName>YeetCode.CLI</AssemblyName>
     <PackageId>ArtificialNecessity.YeetCode.CLI</PackageId>
     <IsPackable>true</IsPackable>
     <Authors>David Jeske</Authors>
