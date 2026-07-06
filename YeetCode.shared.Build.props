@@ -74,19 +74,23 @@
 
        All timestamps are LOCAL TIME. Each segment stays ≤ 65535.
        Just 'dotnet build' — zero ceremony.
+
+       Publish scripts capture the timestamp ONCE and pass the _Build*
+       segments as global properties (/p:) so all packages in a single
+       publish run share the exact same version stamp (no per-project skew).
        ══════════════════════════════════════════════════════════════════ -->
   <PropertyGroup>
     <YeetCodeMajorVersion>0</YeetCodeMajorVersion>
     <!-- AssemblyVersion segments (ushort-constrained, split timestamp) -->
-    <_BuildYYMM>$([System.DateTime]::Now.ToString("yyMM"))</_BuildYYMM>
-    <_BuildDDHH>$([System.DateTime]::Now.ToString("ddHH"))</_BuildDDHH>
-    <_Buildmmss>$([System.DateTime]::Now.ToString("mmss"))</_Buildmmss>
+    <_BuildYYMM Condition="'$(_BuildYYMM)' == ''">$([System.DateTime]::Now.ToString("yyMM"))</_BuildYYMM>
+    <_BuildDDHH Condition="'$(_BuildDDHH)' == ''">$([System.DateTime]::Now.ToString("ddHH"))</_BuildDDHH>
+    <_Buildmmss Condition="'$(_Buildmmss)' == ''">$([System.DateTime]::Now.ToString("mmss"))</_Buildmmss>
     <VersionPrefix>$(YeetCodeMajorVersion).$(_BuildYYMM).$(_BuildDDHH).$(_Buildmmss)</VersionPrefix>
     <AssemblyVersion>$(VersionPrefix)</AssemblyVersion>
     <FileVersion>$(VersionPrefix)</FileVersion>
     <!-- PackageVersion segments (NuGet, no ushort constraint — full date+time) -->
-    <_BuildYYMMDD>$([System.DateTime]::Now.ToString("yyMMdd"))</_BuildYYMMDD>
-    <_BuildHHmmss>$([System.DateTime]::Now.ToString("HHmmss"))</_BuildHHmmss>
+    <_BuildYYMMDD Condition="'$(_BuildYYMMDD)' == ''">$([System.DateTime]::Now.ToString("yyMMdd"))</_BuildYYMMDD>
+    <_BuildHHmmss Condition="'$(_BuildHHmmss)' == ''">$([System.DateTime]::Now.ToString("HHmmss"))</_BuildHHmmss>
     <Version>$(YeetCodeMajorVersion).$(_BuildYYMMDD).$(_BuildHHmmss)</Version>
   </PropertyGroup>
 

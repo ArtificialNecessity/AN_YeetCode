@@ -2,7 +2,9 @@
 # publish-nuget.ps1 — Build release packages and push to NuGet.org
 #
 # Versioning is timestamp-based (v2) — every build gets a unique version
-# automatically via YeetCode.shared.Build.props. No version files to manage.
+# automatically via YeetCode.shared.Build.props. The timestamp is captured
+# once here and passed to MSBuild so all packages in this run get the exact
+# same version (no inter-project skew). No version files to manage.
 #
 # Publishes two product families:
 #   1. ArtificialNecessity.YeetJson          — standalone HJSON parser library
@@ -45,9 +47,21 @@ $projectPaths = @(
 
 Write-Host "`n=== YeetCode publish-nuget (Release) ===" -ForegroundColor Cyan
 
+# Capture timestamp ONCE so all packages in this run get the same version
+$now = [System.DateTime]::Now
+$buildYYMM   = $now.ToString('yyMM')
+$buildDDHH   = $now.ToString('ddHH')
+$buildmmss   = $now.ToString('mmss')
+$buildYYMMDD = $now.ToString('yyMMdd')
+$buildHHmmss = $now.ToString('HHmmss')
+$versionProps = "/p:_BuildYYMM=$buildYYMM", "/p:_BuildDDHH=$buildDDHH", "/p:_Buildmmss=$buildmmss", "/p:_BuildYYMMDD=$buildYYMMDD", "/p:_BuildHHmmss=$buildHHmmss"
+
+$major = 0
+Write-Host "Version stamp: $major.$buildYYMM.$buildDDHH.$buildmmss (pkg: $major.$buildYYMMDD.$buildHHmmss)" -ForegroundColor Gray
+
 # ── Step 1: Build solution ─────────────────────────────────────────
 Write-Host "`n[1/3] Building solution (Release)..." -ForegroundColor Green
-dotnet build $solutionPath -c Release
+dotnet build $solutionPath -c Release @versionProps
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ERROR: dotnet build failed" -ForegroundColor Red
     exit $LASTEXITCODE
@@ -61,7 +75,7 @@ for ($projectIndex = 0; $projectIndex -lt $projectPaths.Count; $projectIndex++) 
     $projectPath = $projectPaths[$projectIndex]
     $packageId = $packageIds[$projectIndex]
     Write-Host "  Packing $packageId..." -ForegroundColor Gray
-    dotnet pack $projectPath -c Release --no-build
+    dotnet pack $projectPath -c Release --no-build @versionProps
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: dotnet pack failed for $packageId" -ForegroundColor Red
         exit $LASTEXITCODE
