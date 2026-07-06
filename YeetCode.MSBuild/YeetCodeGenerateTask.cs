@@ -43,12 +43,24 @@ public class YeetCodeGenerateTask : Task
     /// </summary>
     public string? Defines { get; set; }
 
+    /// <summary>
+    /// Line-ending normalization for generated output files.
+    /// Values: "lf" (default), "crlf", "preserve".
+    /// </summary>
+    public string? LineEndings { get; set; }
+
     public override bool Execute()
     {
         Log.LogMessage(MessageImportance.Normal,
             "YeetCode Generate: {0} + {1} → {2}", InputFile, GrammarFile, TemplateFile);
 
         var grammarDefines = ParseDefines(Defines);
+
+        OutputLineEndingMode? parsedLineEndingMode = LineEndingModeParser.TryParse(LineEndings);
+        if (parsedLineEndingMode == null) {
+            Log.LogError("YeetCode Generate: invalid LineEndings value '{0}'. Valid values: lf, crlf, preserve.", LineEndings);
+            return false;
+        }
 
         var generateOptions = new GenerateOptions
         {
@@ -59,7 +71,8 @@ public class YeetCodeGenerateTask : Task
             FunctionsFilePath = string.IsNullOrEmpty(FunctionsFile) ? null : FunctionsFile,
             SingleOutputFilePath = string.IsNullOrEmpty(OutputFile) ? null : OutputFile,
             OutputDirectoryPath = string.IsNullOrEmpty(OutputDirectory) ? null : OutputDirectory,
-            GrammarDefines = grammarDefines.Count > 0 ? grammarDefines : null
+            GrammarDefines = grammarDefines.Count > 0 ? grammarDefines : null,
+            LineEndings = parsedLineEndingMode.Value
         };
 
         var pipelineResult = YeetCodePipeline.Generate(generateOptions);

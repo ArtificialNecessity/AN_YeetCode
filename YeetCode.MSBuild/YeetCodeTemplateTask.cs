@@ -31,10 +31,22 @@ public class YeetCodeTemplateTask : Task
 
     public string? OutputDirectory { get; set; }
 
+    /// <summary>
+    /// Line-ending normalization for generated output files.
+    /// Values: "lf" (default), "crlf", "preserve".
+    /// </summary>
+    public string? LineEndings { get; set; }
+
     public override bool Execute()
     {
         Log.LogMessage(MessageImportance.Normal,
             "YeetCode Template: {0} → {1}", DataFile, TemplateFile);
+
+        OutputLineEndingMode? parsedLineEndingMode = LineEndingModeParser.TryParse(LineEndings);
+        if (parsedLineEndingMode == null) {
+            Log.LogError("YeetCode Template: invalid LineEndings value '{0}'. Valid values: lf, crlf, preserve.", LineEndings);
+            return false;
+        }
 
         var templateOptions = new TemplateOptions
         {
@@ -43,7 +55,8 @@ public class YeetCodeTemplateTask : Task
             TemplateFilePath = TemplateFile,
             FunctionsFilePath = string.IsNullOrEmpty(FunctionsFile) ? null : FunctionsFile,
             SingleOutputFilePath = string.IsNullOrEmpty(OutputFile) ? null : OutputFile,
-            OutputDirectoryPath = string.IsNullOrEmpty(OutputDirectory) ? null : OutputDirectory
+            OutputDirectoryPath = string.IsNullOrEmpty(OutputDirectory) ? null : OutputDirectory,
+            LineEndings = parsedLineEndingMode.Value
         };
 
         var pipelineResult = YeetCodePipeline.RunTemplateCommand(templateOptions);

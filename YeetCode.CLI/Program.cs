@@ -49,6 +49,7 @@ public static class Program
         string? singleOutputFilePath = GetOptionalArg(parsedArgs, "output");
         string? outputDirectoryPath = GetOptionalArg(parsedArgs, "outdir");
         var grammarDefines = ParseDefines(parsedArgs);
+        var lineEndingMode = ParseLineEndingsArg(parsedArgs);
 
         var generateOptions = new GenerateOptions
         {
@@ -59,7 +60,8 @@ public static class Program
             FunctionsFilePath = functionsFilePath,
             SingleOutputFilePath = singleOutputFilePath,
             OutputDirectoryPath = outputDirectoryPath,
-            GrammarDefines = grammarDefines.Count > 0 ? grammarDefines : null
+            GrammarDefines = grammarDefines.Count > 0 ? grammarDefines : null,
+            LineEndings = lineEndingMode
         };
 
         var pipelineResult = YeetCodePipeline.Generate(generateOptions);
@@ -84,6 +86,7 @@ public static class Program
         string inputFilePath = RequireArg(parsedArgs, "input", "parse");
         string? outputFilePath = GetOptionalArg(parsedArgs, "output");
         var grammarDefines = ParseDefines(parsedArgs);
+        var parseLineEndingMode = ParseLineEndingsArg(parsedArgs);
 
         var parseOptions = new ParseOptions
         {
@@ -91,7 +94,8 @@ public static class Program
             GrammarFilePath = grammarFilePath,
             InputFilePath = inputFilePath,
             OutputFilePath = outputFilePath,
-            GrammarDefines = grammarDefines.Count > 0 ? grammarDefines : null
+            GrammarDefines = grammarDefines.Count > 0 ? grammarDefines : null,
+            LineEndings = parseLineEndingMode
         };
 
         var pipelineResult = YeetCodePipeline.Parse(parseOptions);
@@ -113,6 +117,7 @@ public static class Program
         string? functionsFilePath = GetOptionalArg(parsedArgs, "functions");
         string? singleOutputFilePath = GetOptionalArg(parsedArgs, "output");
         string? outputDirectoryPath = GetOptionalArg(parsedArgs, "outdir");
+        var templateLineEndingMode = ParseLineEndingsArg(parsedArgs);
 
         var templateOptions = new TemplateOptions
         {
@@ -121,7 +126,8 @@ public static class Program
             TemplateFilePath = templateFilePath,
             FunctionsFilePath = functionsFilePath,
             SingleOutputFilePath = singleOutputFilePath,
-            OutputDirectoryPath = outputDirectoryPath
+            OutputDirectoryPath = outputDirectoryPath,
+            LineEndings = templateLineEndingMode
         };
 
         var pipelineResult = YeetCodePipeline.RunTemplateCommand(templateOptions);
@@ -232,6 +238,20 @@ public static class Program
         return grammarDefines;
     }
 
+    /// <summary>
+    /// Parse the optional --line-endings argument (lf | crlf | preserve). Default: lf.
+    /// </summary>
+    private static OutputLineEndingMode ParseLineEndingsArg(Dictionary<string, List<string>> parsedArgMap)
+    {
+        string? lineEndingsArgValue = GetOptionalArg(parsedArgMap, "line-endings");
+        OutputLineEndingMode? parsedLineEndingMode = LineEndingModeParser.TryParse(lineEndingsArgValue);
+        if (parsedLineEndingMode == null) {
+            throw new InvalidOperationException(
+                $"Invalid --line-endings value '{lineEndingsArgValue}'. Valid values: lf, crlf, preserve.");
+        }
+        return parsedLineEndingMode.Value;
+    }
+
     // ── Help and version ─────────────────────────────────
 
     private static void PrintUsage()
@@ -256,6 +276,7 @@ public static class Program
               --output <file>      Single-file output path
               --outdir <dir>       Multi-file output directory
               --define <name=val>  Grammar parameter (repeatable)
+              --line-endings <m>   Output line endings: lf (default), crlf, preserve
 
             Parse options:
               --schema <file>      Schema file (.ytson)
@@ -263,6 +284,7 @@ public static class Program
               --input <file>       Input file to parse
               --output <file>      Output HJSON file (stdout if omitted)
               --define <name=val>  Grammar parameter (repeatable)
+              --line-endings <m>   Output line endings: lf (default), crlf, preserve
 
             Template options:
               --data <file>        HJSON data file
@@ -271,6 +293,7 @@ public static class Program
               --functions <file>   Functions/lookup tables file (.hjson)
               --output <file>      Single-file output path
               --outdir <dir>       Multi-file output directory
+              --line-endings <m>   Output line endings: lf (default), crlf, preserve
 
             Validate options:
               --schema <file>      Schema file (.ytson)

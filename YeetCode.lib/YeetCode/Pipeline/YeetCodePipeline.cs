@@ -7,6 +7,46 @@ using YeetJson;
 namespace YeetCode.Pipeline;
 
 /// <summary>
+/// Line-ending normalization applied to generated output files.
+/// Default is Lf so generated output is byte-identical across platforms.
+/// </summary>
+public enum OutputLineEndingMode
+{
+    /// <summary>Normalize all line endings to "\n" (default).</summary>
+    Lf,
+
+    /// <summary>Normalize all line endings to "\r\n".</summary>
+    Crlf,
+
+    /// <summary>Leave line endings exactly as produced by templates/inputs.</summary>
+    Preserve
+}
+
+/// <summary>
+/// Parses user-supplied line-ending mode strings ("lf", "crlf", "preserve")
+/// into OutputLineEndingMode values. Shared by CLI and MSBuild task.
+/// </summary>
+public static class LineEndingModeParser
+{
+    /// <summary>
+    /// Parse a mode string. Null/empty returns the default (Lf).
+    /// Returns null for unrecognized values.
+    /// </summary>
+    public static OutputLineEndingMode? TryParse(string? lineEndingModeText)
+    {
+        if (string.IsNullOrWhiteSpace(lineEndingModeText)) return OutputLineEndingMode.Lf;
+
+        return lineEndingModeText.Trim().ToLowerInvariant() switch
+        {
+            "lf" => OutputLineEndingMode.Lf,
+            "crlf" => OutputLineEndingMode.Crlf,
+            "preserve" => OutputLineEndingMode.Preserve,
+            _ => null
+        };
+    }
+}
+
+/// <summary>
 /// Options for the "generate" command — full pipeline:
 /// grammar + input → HJSON → validate → template → output
 /// </summary>
@@ -20,6 +60,7 @@ public class GenerateOptions
     public string? SingleOutputFilePath { get; init; }
     public string? OutputDirectoryPath { get; init; }
     public Dictionary<string, string>? GrammarDefines { get; init; }
+    public OutputLineEndingMode LineEndings { get; init; } = OutputLineEndingMode.Lf;
 }
 
 /// <summary>
@@ -32,6 +73,7 @@ public class ParseOptions
     public required string InputFilePath { get; init; }
     public string? OutputFilePath { get; init; }
     public Dictionary<string, string>? GrammarDefines { get; init; }
+    public OutputLineEndingMode LineEndings { get; init; } = OutputLineEndingMode.Lf;
 }
 
 /// <summary>
@@ -46,6 +88,7 @@ public class TemplateOptions
     public string? FunctionsFilePath { get; init; }
     public string? SingleOutputFilePath { get; init; }
     public string? OutputDirectoryPath { get; init; }
+    public OutputLineEndingMode LineEndings { get; init; } = OutputLineEndingMode.Lf;
 }
 
 /// <summary>
@@ -100,7 +143,8 @@ public static class YeetCodePipeline
             generateOptions.TemplateFilePath,
             generateOptions.FunctionsFilePath,
             generateOptions.SingleOutputFilePath,
-            generateOptions.OutputDirectoryPath);
+            generateOptions.OutputDirectoryPath,
+            generateOptions.LineEndings);
     }
 
     /// <summary>
@@ -125,6 +169,8 @@ public static class YeetCodePipeline
         string jsonOutput = JsonSerializer.Serialize(
             validatedDataDocument.RootElement,
             new JsonSerializerOptions { WriteIndented = true });
+
+        jsonOutput = NormalizeLineEndings(jsonOutput, parseOptions.LineEndings);
 
         // 5. Write output
         if (parseOptions.OutputFilePath != null) {
@@ -158,7 +204,8 @@ public static class YeetCodePipeline
             templateOptions.TemplateFilePath,
             templateOptions.FunctionsFilePath,
             templateOptions.SingleOutputFilePath,
-            templateOptions.OutputDirectoryPath);
+            templateOptions.OutputDirectoryPath,
+            templateOptions.LineEndings);
     }
 
     /// <summary>
@@ -183,6 +230,20 @@ public static class YeetCodePipeline
     }
 
     // ── Internal helpers ──────────────────────────────────
+
+    /// <summary>
+    /// Normalize line endings in output content per the requested mode.
+    /// Preserve returns the content unchanged.
+    /// </summary>
+    private static string NormalizeLineEndings(string outputContent, OutputLineEndingMode lineEndingMode)
+    {
+        return lineEndingMode switch
+        {
+            OutputLineEndingMode.Lf => outputContent.ReplaceLineEndings("\n"),
+            OutputLineEndingMode.Crlf => outputContent.ReplaceLineEndings("\r\n"),
+            _ => outputContent
+        };
+    }
 
     private static JsonDocument ParseInputWithGrammar(
         string grammarFilePath,
@@ -242,7 +303,8 @@ public static class YeetCodePipeline
         string templateFilePath,
         string? functionsFilePath,
         string? singleOutputFilePath,
-        string? outputDirectoryPath)
+        string? outputDirectoryPath,
+        OutputLineEndingMode lineEndingMode)
     {
         string templateSourceText = File.ReadAllText(templateFilePath);
 
@@ -263,6 +325,13 @@ public static class YeetCodePipeline
         var generatedFiles = templateEvaluator.EvaluateMultiFile(templateNodes);
 
         if (generatedFiles.Count > 0) {
+            // Normalize line endings on all generated file contents
+            if (lineEndingMode != OutputLineEndingMode.Preserve) {
+                foreach (string generatedFileName in generatedFiles.Keys.ToList()) {
+                    generatedFiles[generatedFileName] = NormalizeLineEndings(generatedFiles[generatedFileName], lineEndingMode);
+                }
+            }
+
             // Multi-file mode
             if (singleOutputFilePath != null && outputDirectoryPath == null) {
                 throw new InvalidOperationException(

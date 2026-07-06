@@ -24,7 +24,8 @@
            TemplateFile="proto-csharp.yt"
            FunctionsFile="functions.hjson"
            OutputDirectory="generated/"
-           Defines="syntax=proto3" />
+           Defines="syntax=proto3"
+           LineEndings="lf" />
        ════════════════════════════════════════════════════════════════ -->
 
   <UsingTask

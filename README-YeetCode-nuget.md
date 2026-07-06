@@ -144,6 +144,7 @@ Add the package reference, then use the tasks in your `.csproj`:
 | `OutputFile`      |          | Single-file output path                |
 | `OutputDirectory` |          | Multi-file output directory            |
 | `Defines`         |          | Semicolon-separated grammar parameters |
+| `LineEndings`     |          | Output line endings: `lf` (default), `crlf`, `preserve` |
 
 **YeetCodeTemplateTask** (half yeet):
 
@@ -155,6 +156,11 @@ Add the package reference, then use the tasks in your `.csproj`:
 | `FunctionsFile`   |          | Lookup tables (.hjson)         |
 | `OutputFile`      |          | Single-file output path        |
 | `OutputDirectory` |          | Multi-file output directory    |
+| `LineEndings`     |          | Output line endings: `lf` (default), `crlf`, `preserve` |
+
+### Line Endings
+
+By default, all generated output is normalized to **LF** (`\n`) line endings, even on Windows, so generated files are byte-identical across platforms. Set `LineEndings="crlf"` to force CRLF, or `LineEndings="preserve"` to keep whatever line endings the templates/inputs produce. The CLI equivalent is `--line-endings lf|crlf|preserve`.
 
 ---
 
