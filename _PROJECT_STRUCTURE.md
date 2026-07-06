@@ -125,7 +125,8 @@ AN_YeetCode/
 ├── README.md                          # Project README
 ├── README-nuget.md                    # NuGet package README (how-to-use guide)
 ├── cmd/
-│   └── publish-local.ps1              # Build + pack + deploy to local NuGet feed
+│   ├── publish-local.cs               # Cross-platform build + pack + deploy to local NuGet feed
+│   └── publish-local.cmd              # Thin Windows wrapper for publish-local.cs
 │
 └── AN_YeetCode.sln                    # Solution file
 ```
